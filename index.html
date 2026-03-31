@@ -1,757 +1,739 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BOL PDF Generator — Live Demo</title>
-
-<!-- jsPDF + AutoTable (no server required) -->
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BOL PDF Generator — Demo</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-
 <style>
-  /* ── Reset & base ─────────────────────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1B2A4A;--blue:#2E5090;--sky:#D6E4F7;--gold:#E8A020;
+  --light:#F4F5F7;--gray:#CBD0D8;--text:#1A1A2E;--muted:#5A6478;
+  --white:#fff;--red:#C0392B;--green:#1a6b3a;--r:8px;
+}
+body{font-family:'Georgia',serif;background:var(--light);color:var(--text);min-height:100vh;overflow:hidden}
 
-  :root {
-    --navy:   #1B2A4A;
-    --blue:   #2E5090;
-    --sky:    #D6E4F7;
-    --gold:   #E8A020;
-    --light:  #F4F5F7;
-    --gray:   #CBD0D8;
-    --text:   #1A1A2E;
-    --muted:  #5A6478;
-    --white:  #ffffff;
-    --radius: 10px;
-  }
+/* Header */
+header{background:var(--navy);padding:14px 28px;display:flex;align-items:center;gap:14px;border-bottom:3px solid var(--gold);height:58px}
+header h1{font-size:20px;color:var(--white);font-weight:normal;letter-spacing:-0.02em}
+header h1 span{color:var(--gold);font-weight:bold}
+header .sub{font-size:10px;color:#7a9bbf;font-family:'Courier New',monospace;letter-spacing:.14em;text-transform:uppercase}
+.badge{margin-left:auto;background:var(--gold);color:var(--navy);font-family:'Courier New',monospace;font-size:10px;font-weight:bold;letter-spacing:.1em;padding:4px 11px;border-radius:20px;white-space:nowrap}
 
-  body {
-    font-family: 'Georgia', serif;
-    background: var(--light);
-    color: var(--text);
-    min-height: 100vh;
-  }
+/* App shell */
+.app{display:grid;grid-template-columns:490px 1fr;height:calc(100vh - 58px)}
 
-  /* ── Header ───────────────────────────────────────────────────────────── */
-  header {
-    background: var(--navy);
-    padding: 28px 40px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    border-bottom: 3px solid var(--gold);
-  }
-  header .logo {
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--sky);
-    line-height: 1.5;
-  }
-  header h1 {
-    font-size: 26px;
-    color: var(--white);
-    letter-spacing: -0.02em;
-    font-weight: normal;
-  }
-  header h1 span { color: var(--gold); font-weight: bold; }
-  header .badge {
-    margin-left: auto;
-    background: var(--gold);
-    color: var(--navy);
-    font-family: 'Courier New', monospace;
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 0.12em;
-    padding: 5px 12px;
-    border-radius: 20px;
-  }
+/* Left column */
+.left-col{display:flex;flex-direction:column;border-right:1px solid var(--gray);overflow:hidden}
+.panel{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 
-  /* ── Layout ───────────────────────────────────────────────────────────── */
-  .container { max-width: 1080px; margin: 0 auto; padding: 40px 20px 60px; }
+/* Cards */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--gray);overflow:hidden;flex-shrink:0}
+.card-hdr{background:var(--navy);color:var(--white);padding:8px 13px;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.card-hdr .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.card-body{padding:12px}
 
-  .intro {
-    background: var(--white);
-    border-left: 4px solid var(--gold);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-    margin-bottom: 32px;
-    font-size: 15px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-  .intro strong { color: var(--navy); }
+/* Tabs */
+.tabs{display:flex;border-bottom:2px solid var(--gray);background:var(--white)}
+.tab{padding:8px 14px;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold);font-weight:bold}
+.tab-pane{display:none;padding:12px}
+.tab-pane.active{display:block}
 
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+/* Form */
+.row{display:grid;gap:8px;margin-bottom:8px}
+.row.c2{grid-template-columns:1fr 1fr}
+.row.c3{grid-template-columns:1fr 1fr 1fr}
+label{display:block;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+input[type=text],input[type=url],input[type=number],select,textarea{
+  width:100%;border:1.5px solid var(--gray);border-radius:5px;
+  padding:6px 9px;font-size:12px;font-family:'Courier New',monospace;
+  color:var(--text);background:var(--light);outline:none;transition:border-color .15s
+}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:var(--white)}
+textarea.json-area{height:240px;font-size:11px;resize:vertical}
+textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
 
-  /* ── Cards ────────────────────────────────────────────────────────────── */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--gray);
-    overflow: hidden;
-  }
-  .card-header {
-    background: var(--navy);
-    color: var(--white);
-    padding: 12px 18px;
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .card-header .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    display: inline-block;
-  }
-  .card-body { padding: 16px 18px; }
+/* Section labels */
+.sec{font-size:9px;font-family:'Courier New',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);font-weight:bold;margin:10px 0 5px;border-bottom:1px solid var(--sky);padding-bottom:3px}
+.sec:first-child{margin-top:0}
 
-  /* ── Form elements ────────────────────────────────────────────────────── */
-  label {
-    display: block;
-    font-size: 11px;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 5px;
-    margin-top: 14px;
-  }
-  label:first-child { margin-top: 0; }
+/* Items table */
+.items-table{width:100%;border-collapse:collapse;font-size:11px;font-family:'Courier New',monospace}
+.items-table th{background:var(--navy);color:var(--white);padding:4px 5px;text-align:left;font-size:9px;letter-spacing:.07em;font-weight:normal;white-space:nowrap}
+.items-table td{padding:2px 3px;border-bottom:1px solid var(--gray);vertical-align:middle}
+.items-table td input,.items-table td select{padding:3px 4px;font-size:11px;border-radius:3px}
+.items-table tr:nth-child(even) td{background:#f9f9fb}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:15px;padding:0 3px;line-height:1}
+.haz-cell{text-align:center}
+.haz-cell input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:var(--red)}
+.add-item-btn{margin-top:6px;padding:5px 12px;font-size:10px;font-family:'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid var(--blue);border-radius:4px;background:var(--white);color:var(--blue);cursor:pointer;transition:all .15s}
+.add-item-btn:hover{background:var(--sky)}
 
-  textarea, input[type="text"], input[type="url"] {
-    width: 100%;
-    border: 1.5px solid var(--gray);
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-size: 13px;
-    font-family: 'Courier New', monospace;
-    color: var(--text);
-    background: var(--light);
-    outline: none;
-    transition: border-color 0.15s;
-    resize: vertical;
-  }
-  textarea:focus, input:focus { border-color: var(--blue); background: var(--white); }
+/* Signature zones */
+.sig-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sig-block label.sig-sec{font-size:9px;font-family:'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:bold;display:block;margin-bottom:5px}
+.sig-zone{position:relative;border:2px dashed var(--gray);border-radius:6px;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--light);transition:border-color .15s}
+.sig-zone:hover{border-color:var(--blue)}
+.sig-zone.loaded{border-style:solid;border-color:var(--sky);background:var(--white)}
+.sig-zone img.sig-img{max-width:100%;max-height:72px;object-fit:contain;pointer-events:none}
+.sig-zone .ph{font-size:11px;color:var(--muted);text-align:center;padding:8px;font-style:italic;line-height:1.4}
+.sig-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.sig-row-btns{display:flex;gap:5px;margin-top:5px}
+.method-btn{flex:1;padding:4px;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--gray);border-radius:3px;background:var(--white);cursor:pointer;color:var(--muted);transition:all .12s}
+.method-btn.on{border-color:var(--blue);color:var(--blue);background:var(--sky)}
+.url-row{display:none;margin-top:5px}
+.url-row.show{display:block}
+.clear-sig{font-size:9px;color:var(--red);cursor:pointer;background:none;border:none;font-family:'Courier New',monospace;letter-spacing:.06em;text-transform:uppercase;margin-top:3px;display:none;padding:0}
+.clear-sig.show{display:inline-block}
+.sig-meta{margin-top:7px;display:flex;flex-direction:column;gap:4px}
 
-  textarea.json-area { height: 340px; font-size: 12px; }
+/* Bottom bar */
+.bot-bar{flex-shrink:0;padding:10px 14px;background:var(--white);border-top:1px solid var(--gray);display:flex;align-items:center;gap:10px}
+.gen-btn{flex:1;background:var(--navy);color:var(--white);border:none;border-radius:6px;padding:11px 18px;font-size:13px;font-family:'Georgia',serif;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:7px}
+.gen-btn:hover{background:var(--blue)}
+.gen-btn:disabled{background:var(--gray);cursor:not-allowed}
+.dl-btn{padding:11px 14px;background:var(--gold);color:var(--navy);border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:'Georgia',serif;font-weight:bold;transition:opacity .15s;display:none;white-space:nowrap}
+.dl-btn.show{display:block}
+.dl-btn:hover{opacity:.85}
+#status{font-size:11px;font-family:'Courier New',monospace;color:var(--muted);min-height:14px;margin-top:3px}
+#status.err{color:var(--red)}
+#status.ok{color:var(--green)}
 
-  .sig-preview {
-    margin-top: 10px;
-    background: var(--light);
-    border: 1.5px dashed var(--gray);
-    border-radius: 6px;
-    height: 80px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .sig-preview img { max-height: 72px; max-width: 100%; object-fit: contain; }
-  .sig-preview .placeholder { font-size: 12px; color: var(--muted); font-style: italic; }
-
-  /* ── Generate button ──────────────────────────────────────────────────── */
-  .generate-wrap { margin-top: 28px; text-align: center; }
-  button#generateBtn {
-    background: var(--navy);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    padding: 16px 44px;
-    font-size: 15px;
-    font-family: 'Georgia', serif;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    box-shadow: 0 3px 12px rgba(27,42,74,0.25);
-  }
-  button#generateBtn:hover { background: var(--blue); transform: translateY(-1px); }
-  button#generateBtn:active { transform: translateY(0); }
-  button#generateBtn .icon { font-size: 20px; }
-
-  /* ── Status ───────────────────────────────────────────────────────────── */
-  #status {
-    margin-top: 14px;
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-    min-height: 20px;
-    text-align: center;
-  }
-  #status.error { color: #c0392b; font-style: normal; }
-  #status.success { color: #1a6b3a; font-style: normal; }
-
-  /* ── JSON error highlight ─────────────────────────────────────────────── */
-  textarea.json-area.invalid { border-color: #c0392b; background: #fff8f8; }
-
-  /* ── How it works ─────────────────────────────────────────────────────── */
-  .how {
-    margin-top: 36px;
-    background: var(--white);
-    border-radius: var(--radius);
-    border: 1px solid var(--gray);
-    padding: 24px 28px;
-  }
-  .how h2 {
-    font-size: 14px;
-    font-family: 'Courier New', monospace;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--navy);
-    margin-bottom: 16px;
-  }
-  .steps { display: flex; gap: 24px; flex-wrap: wrap; }
-  .step {
-    flex: 1; min-width: 180px;
-    display: flex; gap: 12px; align-items: flex-start;
-  }
-  .step-num {
-    width: 28px; height: 28px;
-    background: var(--gold);
-    color: var(--navy);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 13px;
-    flex-shrink: 0;
-  }
-  .step-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
-  .step-text strong { color: var(--text); display: block; margin-bottom: 2px; }
-
-  /* ── Footer ───────────────────────────────────────────────────────────── */
-  footer {
-    margin-top: 40px;
-    text-align: center;
-    font-size: 11px;
-    color: var(--gray);
-    font-family: 'Courier New', monospace;
-    padding-bottom: 20px;
-  }
+/* Preview pane */
+.preview-pane{display:flex;flex-direction:column;background:#525659;overflow:hidden}
+.prev-toolbar{background:#3c3c3c;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.prev-toolbar span{font-size:10px;font-family:'Courier New',monospace;color:#ccc;letter-spacing:.1em;text-transform:uppercase}
+#previewContainer{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.prev-ph{color:#888;font-family:'Courier New',monospace;font-size:11px;text-align:center;margin:auto;letter-spacing:.08em;text-transform:uppercase;line-height:2.5}
+#previewContainer iframe{box-shadow:0 4px 20px rgba(0,0,0,.4);border:none;border-radius:2px;background:white}
+.sample-btn{padding:4px 10px;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.sample-btn:hover{background:var(--gold);color:var(--navy)}
 </style>
 </head>
-
 <body>
 
 <header>
   <div>
-    <div class="logo">Freight Document Suite</div>
+    <div class="sub">Freight Document Suite</div>
     <h1>Bill of Lading <span>Generator</span></h1>
   </div>
-  <div class="badge">⚡ Client-Side Demo</div>
+  <div class="badge">⚡ No-Server Demo</div>
 </header>
 
-<div class="container">
+<div class="app">
 
-  <div class="intro">
-    <strong>This demo runs entirely in your browser — no server, no uploads.</strong>
-    Paste your BOL JSON data below, provide a link to a signature image, and click
-    <em>Generate PDF</em>. The PDF is built on-the-fly using the same data structure
-    your system already produces.
-  </div>
+<!-- ══════════ LEFT PANEL ══════════ -->
+<div class="left-col">
+<div class="panel">
 
-  <div class="grid">
+  <!-- Input method card -->
+  <div class="card" style="overflow:visible;flex-shrink:0">
+    <div class="tabs">
+      <button class="tab active" data-tab="json">JSON Input</button>
+      <button class="tab" data-tab="form">Form Builder</button>
+    </div>
 
-    <!-- Left: JSON input -->
-    <div class="card">
-      <div class="card-header"><span class="dot"></span>BOL JSON Data</div>
-      <div class="card-body">
-        <label>Paste your JSON payload</label>
-        <textarea class="json-area" id="jsonInput" spellcheck="false"></textarea>
-        <label style="margin-top:10px">
-          <button id="loadSample" style="
-            background:none; border:1px solid var(--gold); color:var(--gold);
-            border-radius:4px; padding:4px 10px; font-size:11px;
-            font-family:'Courier New',monospace; letter-spacing:0.08em;
-            cursor:pointer; text-transform:uppercase;">
-            Load sample data
-          </button>
-        </label>
+    <!-- ── JSON tab ── -->
+    <div class="tab-pane active" id="tab-json">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <label style="margin:0">Paste BOL JSON payload</label>
+        <button class="sample-btn" id="loadSample">Load Sample</button>
+      </div>
+      <textarea class="json-area" id="jsonInput" spellcheck="false" placeholder='{"bol_number":"BOL-001","shipper":{...},"items":[...]}'></textarea>
+      <div style="margin-top:6px;font-size:10px;color:var(--muted);font-family:'Courier New',monospace">
+        Fields: bol_number, date, pro_number, po_number, pickup_date, shipper, consignee, carrier, billing, items, declared_value, special_instructions, shipper_signature, driver_signature
       </div>
     </div>
 
-    <!-- Right: Signature -->
-    <div class="card">
-      <div class="card-header"><span class="dot"></span>Signature Image</div>
-      <div class="card-body">
-        <label>Signature image URL</label>
-        <input type="url" id="sigUrl"
-          placeholder="https://example.com/signature.png" />
-
-        <div class="sig-preview" id="sigPreview">
-          <span class="placeholder">Preview will appear here</span>
-        </div>
-
-        <div style="margin-top:14px; font-size:12px; color:var(--muted); line-height:1.6">
-          Supports PNG, JPG, or SVG. The URL is fetched client-side and embedded
-          directly into the PDF — no data leaves your browser.
-        </div>
-
-        <hr style="margin:16px 0; border:none; border-top:1px solid var(--gray)" />
-
-        <label>Shipper name</label>
-        <input type="text" id="shipperName" placeholder="e.g. James Thornton" />
-
-        <label>Driver / Carrier name</label>
-        <input type="text" id="driverName" placeholder="e.g. Maria Gonzalez" />
+    <!-- ── Form tab ── -->
+    <div class="tab-pane" id="tab-form">
+      <div class="sec">BOL Reference</div>
+      <div class="row c3">
+        <div><label>BOL Number</label><input type="text" id="f_bol_number" placeholder="BOL-2024-001"/></div>
+        <div><label>Date</label><input type="text" id="f_date" placeholder="2024-03-31"/></div>
+        <div><label>PRO Number</label><input type="text" id="f_pro_number" placeholder="PRO-112938"/></div>
       </div>
-    </div>
+      <div class="row c2">
+        <div><label>PO / Reference #</label><input type="text" id="f_po_number" placeholder="PO-88821"/></div>
+        <div><label>Pickup Date</label><input type="text" id="f_pickup_date" placeholder="2024-03-31"/></div>
+      </div>
 
+      <div class="sec">Shipper (Consignor)</div>
+      <div class="row"><div><label>Company Name</label><input type="text" id="f_s_name"/></div></div>
+      <div class="row c2"><div><label>Address</label><input type="text" id="f_s_address"/></div><div><label>City</label><input type="text" id="f_s_city"/></div></div>
+      <div class="row c3"><div><label>State</label><input type="text" id="f_s_state" maxlength="2"/></div><div><label>ZIP</label><input type="text" id="f_s_zip"/></div><div><label>Phone</label><input type="text" id="f_s_phone"/></div></div>
+
+      <div class="sec">Consignee (Ship To)</div>
+      <div class="row"><div><label>Company Name</label><input type="text" id="f_c_name"/></div></div>
+      <div class="row c2"><div><label>Address</label><input type="text" id="f_c_address"/></div><div><label>City</label><input type="text" id="f_c_city"/></div></div>
+      <div class="row c3"><div><label>State</label><input type="text" id="f_c_state" maxlength="2"/></div><div><label>ZIP</label><input type="text" id="f_c_zip"/></div><div><label>Phone</label><input type="text" id="f_c_phone"/></div></div>
+
+      <div class="sec">Carrier</div>
+      <div class="row c2"><div><label>Carrier Name</label><input type="text" id="f_car_name"/></div><div><label>SCAC Code</label><input type="text" id="f_car_scac" maxlength="4"/></div></div>
+      <div class="row c3"><div><label>Trailer #</label><input type="text" id="f_car_trailer"/></div><div><label>Seal #</label><input type="text" id="f_car_seal"/></div><div><label>DOT #</label><input type="text" id="f_car_dot"/></div></div>
+      <div class="row c2">
+        <div><label>Billing Type</label>
+          <select id="f_billing_type"><option>Prepaid</option><option>Collect</option><option>Third Party</option><option>C.O.D.</option></select>
+        </div>
+        <div><label>Freight Charges</label><input type="text" id="f_freight_charges" placeholder="$0.00"/></div>
+      </div>
+      <div class="row c2">
+        <div><label>Declared Value ($)</label><input type="text" id="f_declared_value" placeholder="e.g. 25000"/></div>
+        <div><label>COD Amount ($)</label><input type="text" id="f_cod_amount" placeholder="If applicable"/></div>
+      </div>
+
+      <div class="sec">Special Instructions</div>
+      <div class="row"><div><textarea id="f_special" rows="2" style="resize:vertical" placeholder="Temperature-sensitive, keep above 40°F…"></textarea></div></div>
+
+      <div class="sec">Line Items</div>
+      <div style="overflow-x:auto">
+        <table class="items-table"><thead><tr>
+          <th style="min-width:110px">Description</th><th>Qty</th><th>Unit</th><th>Wt(lb)</th><th>Class</th><th>NMFC</th><th>HM</th><th></th>
+        </tr></thead><tbody id="itemsBody"></tbody></table>
+      </div>
+      <button class="add-item-btn" id="addItemBtn">+ Add Line Item</button>
+    </div>
   </div>
 
-  <div class="generate-wrap">
-    <button id="generateBtn">
-      <span class="icon">📄</span> Generate &amp; Download PDF
-    </button>
+  <!-- Signatures card -->
+  <div class="card" style="flex-shrink:0">
+    <div class="card-hdr"><span class="dot"></span>Signatures</div>
+    <div class="card-body">
+      <div class="sig-pair">
+
+        <!-- Shipper sig -->
+        <div class="sig-block">
+          <label class="sig-sec">Shipper / Consignor</label>
+          <div class="sig-zone" id="zone-shipper">
+            <input type="file" id="file-shipper" accept="image/*"/>
+            <div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>
+          </div>
+          <div class="sig-row-btns">
+            <button class="method-btn on" data-who="shipper" data-m="upload">Upload</button>
+            <button class="method-btn" data-who="shipper" data-m="url">From URL</button>
+          </div>
+          <div class="url-row" id="url-row-shipper">
+            <input type="url" id="url-shipper" placeholder="https://…"/>
+          </div>
+          <button class="clear-sig" id="clear-shipper">✕ Clear</button>
+          <div class="sig-meta">
+            <div><label>Printed Name</label><input type="text" id="sig-name-shipper" placeholder="Full name"/></div>
+            <div><label>Title</label><input type="text" id="sig-title-shipper" placeholder="Shipping Manager"/></div>
+          </div>
+        </div>
+
+        <!-- Driver sig -->
+        <div class="sig-block">
+          <label class="sig-sec">Driver / Carrier</label>
+          <div class="sig-zone" id="zone-driver">
+            <input type="file" id="file-driver" accept="image/*"/>
+            <div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>
+          </div>
+          <div class="sig-row-btns">
+            <button class="method-btn on" data-who="driver" data-m="upload">Upload</button>
+            <button class="method-btn" data-who="driver" data-m="url">From URL</button>
+          </div>
+          <div class="url-row" id="url-row-driver">
+            <input type="url" id="url-driver" placeholder="https://…"/>
+          </div>
+          <button class="clear-sig" id="clear-driver">✕ Clear</button>
+          <div class="sig-meta">
+            <div><label>Printed Name</label><input type="text" id="sig-name-driver" placeholder="Full name"/></div>
+            <div><label>Title / License #</label><input type="text" id="sig-title-driver" placeholder="Driver / CDL-A"/></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panel -->
+
+<!-- Bottom bar -->
+<div class="bot-bar">
+  <div style="flex:1">
+    <button class="gen-btn" id="generateBtn">👁 Preview BOL</button>
     <div id="status"></div>
   </div>
+  <button class="dl-btn" id="downloadBtn">⬇ Download PDF</button>
+</div>
+</div><!-- /left-col -->
 
-  <!-- How it works -->
-  <div class="how">
-    <h2>▸ How it works</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-text">
-          <strong>Your JSON</strong>
-          Your existing form data is the input — no reformatting needed.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-text">
-          <strong>Signature URL</strong>
-          A link to a captured signature image is fetched and embedded.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-text">
-          <strong>PDF built in-browser</strong>
-          jsPDF renders the BOL layout entirely client-side.
-        </div>
-      </div>
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-text">
-          <strong>Instant download</strong>
-          The finished PDF is offered for download — zero server round-trips.
-        </div>
-      </div>
+<!-- ══════════ RIGHT PREVIEW ══════════ -->
+<div class="preview-pane">
+  <div class="prev-toolbar">
+    <span>Live Preview</span>
+    <span id="pgInfo" style="color:#888;font-size:9px"></span>
+  </div>
+  <div id="previewContainer">
+    <div class="prev-ph" id="prevPh">
+      Fill the form or paste JSON<br/>↑ then click Preview BOL
     </div>
   </div>
-
 </div>
 
-<footer>BOL PDF Generator Demo — built with jsPDF · No data stored or transmitted</footer>
+</div><!-- /app -->
 
-<!-- ═══════════════════════════════════════════════════════════════════════ -->
 <script>
-/* ── Sample data ─────────────────────────────────────────────────────────── */
+// ── Tabs ──────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab,.tab-pane').forEach(el=>el.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Items table ───────────────────────────────────────────────────
+let rows = [];
+const CLASSES = ['50','55','60','65','70','77.5','85','92.5','100','110','125','150','175','200','250','300','400','500'];
+const UNITS   = ['Pallets','Crates','Boxes','Drums','Pieces','Skids','Bags','Rolls','Cartons','Bundles'];
+
+function renderItems() {
+  const tbody = document.getElementById('itemsBody');
+  tbody.innerHTML = '';
+  rows.forEach((r,i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${r.description||''}" style="width:108px" oninput="rows[${i}].description=this.value"/></td>
+      <td><input type="number" value="${r.quantity||1}" min="1" style="width:38px" oninput="rows[${i}].quantity=+this.value"/></td>
+      <td><select style="width:68px" onchange="rows[${i}].unit=this.value">${UNITS.map(u=>`<option${r.unit===u?' selected':''}>${u}</option>`).join('')}</select></td>
+      <td><input type="number" value="${r.weight_lbs||0}" min="0" style="width:58px" oninput="rows[${i}].weight_lbs=+this.value"/></td>
+      <td><select style="width:52px" onchange="rows[${i}].class=this.value">${CLASSES.map(c=>`<option${r.class===c?' selected':''}>${c}</option>`).join('')}</select></td>
+      <td><input type="text" value="${r.nmfc||''}" placeholder="000-000" style="width:62px" oninput="rows[${i}].nmfc=this.value"/></td>
+      <td class="haz-cell"><input type="checkbox" ${r.hazmat?'checked':''} onchange="rows[${i}].hazmat=this.checked"/></td>
+      <td><button class="del-btn" onclick="rows.splice(${i},1);renderItems()">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('addItemBtn').addEventListener('click',()=>{
+  rows.push({description:'',quantity:1,unit:'Pallets',weight_lbs:0,class:'85',nmfc:'',hazmat:false});
+  renderItems();
+});
+
+// ── Signature system ──────────────────────────────────────────────
+const sigData = {shipper:null, driver:null};
+
+function initSig(who) {
+  const zone  = document.getElementById('zone-'+who);
+  const clear = document.getElementById('clear-'+who);
+  const urlRow= document.getElementById('url-row-'+who);
+  const urlIn = document.getElementById('url-'+who);
+
+  const attachFile = () => {
+    const fi = document.getElementById('file-'+who);
+    if(!fi) return;
+    fi.addEventListener('change', e=>{
+      const f = e.target.files[0]; if(!f) return;
+      const fr = new FileReader();
+      fr.onload = ev => setSig(who, ev.target.result);
+      fr.readAsDataURL(f);
+    });
+  };
+  attachFile();
+
+  // Drag & drop
+  zone.addEventListener('dragover', e=>{e.preventDefault(); zone.style.borderColor='var(--blue)';});
+  zone.addEventListener('dragleave', ()=>zone.style.borderColor='');
+  zone.addEventListener('drop', e=>{
+    e.preventDefault(); zone.style.borderColor='';
+    const f = e.dataTransfer.files[0];
+    if(!f||!f.type.startsWith('image/')) return;
+    const fr = new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(f);
+  });
+
+  // URL
+  let urlT;
+  urlIn.addEventListener('input', ()=>{
+    clearTimeout(urlT); urlT = setTimeout(()=>loadUrl(who, urlIn.value.trim()), 600);
+  });
+
+  // Clear
+  clear.addEventListener('click', ()=>{
+    sigData[who] = null;
+    zone.classList.remove('loaded');
+    zone.innerHTML = `<input type="file" id="file-${who}" accept="image/*"/><div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>`;
+    attachFile();
+    clear.classList.remove('show');
+    urlIn.value='';
+  });
+
+  // Method buttons
+  document.querySelectorAll(`.method-btn[data-who="${who}"]`).forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll(`.method-btn[data-who="${who}"]`).forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      urlRow.classList.toggle('show', btn.dataset.m==='url');
+    });
+  });
+}
+
+async function loadUrl(who, url) {
+  if(!url) return;
+  try {
+    const res = await fetch(url);
+    if(!res.ok) throw 0;
+    const blob = await res.blob();
+    const fr = new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(blob);
+  } catch { setStatus('Could not load image from URL','err'); }
+}
+
+function setSig(who, dataUrl) {
+  sigData[who] = dataUrl;
+  const zone  = document.getElementById('zone-'+who);
+  const clear = document.getElementById('clear-'+who);
+  zone.innerHTML = `<input type="file" id="file-${who}" accept="image/*"/><img class="sig-img" src="${dataUrl}" alt="sig"/>`;
+  zone.classList.add('loaded');
+  // Re-attach file listener so user can replace
+  document.getElementById('file-'+who).addEventListener('change', e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const fr=new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(f);
+  });
+  clear.classList.add('show');
+}
+
+initSig('shipper'); initSig('driver');
+
+// ── Sample data ───────────────────────────────────────────────────
 const SAMPLE = {
-  "bol_number": "BOL-2024-00847",
-  "date": "2024-03-31",
-  "pro_number": "PRO-112938",
-  "shipper": {
-    "name": "Acme Manufacturing Co.",
-    "address": "1450 Industrial Blvd",
-    "city": "Atlanta", "state": "GA", "zip": "30301",
-    "phone": "(404) 555-0192"
-  },
-  "consignee": {
-    "name": "Global Distribution LLC",
-    "address": "8820 Commerce Drive",
-    "city": "Dallas", "state": "TX", "zip": "75201",
-    "phone": "(214) 555-0374"
-  },
-  "carrier": {
-    "name": "Swift Freight Solutions",
-    "scac": "SWFS",
-    "trailer_number": "TR-48821",
-    "seal_number": "SL-99201"
-  },
-  "billing": { "type": "Prepaid" },
-  "special_instructions": "Handle with care. Temperature-sensitive materials. Keep above 40°F.",
-  "items": [
-    {
-      "description": "Industrial Motors - Model XT-400",
-      "quantity": 12, "unit": "Pallets",
-      "weight_lbs": 4800, "class": "85",
-      "nmfc": "114-700", "hazmat": false
-    },
-    {
-      "description": "Control Panel Units - Series B",
-      "quantity": 6, "unit": "Crates",
-      "weight_lbs": 1560, "class": "92.5",
-      "nmfc": "103-420", "hazmat": false
-    },
-    {
-      "description": "Hydraulic Fluid Drums",
-      "quantity": 4, "unit": "Drums",
-      "weight_lbs": 1200, "class": "60",
-      "nmfc": "081-120", "hazmat": true
-    }
+  bol_number:"BOL-2024-00847", date:"2024-03-31", pro_number:"PRO-112938",
+  po_number:"PO-88821", pickup_date:"2024-03-31",
+  shipper:{name:"Acme Manufacturing Co.",address:"1450 Industrial Blvd",city:"Atlanta",state:"GA",zip:"30301",phone:"(404) 555-0192"},
+  consignee:{name:"Global Distribution LLC",address:"8820 Commerce Drive",city:"Dallas",state:"TX",zip:"75201",phone:"(214) 555-0374"},
+  carrier:{name:"Swift Freight Solutions",scac:"SWFS",trailer_number:"TR-48821",seal_number:"SL-99201",dot_number:"DOT-2291847"},
+  billing:{type:"Prepaid",freight_charges:""},
+  declared_value:"28500", cod_amount:"",
+  special_instructions:"Handle with care. Temperature-sensitive materials. Keep above 40°F. Notify consignee 2 hrs prior to delivery.",
+  items:[
+    {description:"Industrial Motors – Model XT-400",quantity:12,unit:"Pallets",weight_lbs:4800,class:"85",nmfc:"114-700",hazmat:false},
+    {description:"Control Panel Units – Series B",quantity:6,unit:"Crates",weight_lbs:1560,class:"92.5",nmfc:"103-420",hazmat:false},
+    {description:"Hydraulic Fluid Drums",quantity:4,unit:"Drums",weight_lbs:1200,class:"60",nmfc:"081-120",hazmat:true}
   ],
-  "totals": { "total_pieces": 22, "total_weight_lbs": 7560 },
-  "shipper_signature": { "name": "James Thornton", "title": "Shipping Manager" },
-  "driver_signature":  { "name": "Maria Gonzalez",  "title": "Driver" }
+  shipper_signature:{name:"James Thornton",title:"Shipping Manager"},
+  driver_signature:{name:"Maria Gonzalez",title:"Driver / CDL-A"}
 };
 
-/* ── DOM refs ────────────────────────────────────────────────────────────── */
-const jsonInput   = document.getElementById('jsonInput');
-const sigUrlInput = document.getElementById('sigUrl');
-const sigPreview  = document.getElementById('sigPreview');
-const shipperName = document.getElementById('shipperName');
-const driverName  = document.getElementById('driverName');
-const statusEl    = document.getElementById('status');
+function loadIntoForm(d) {
+  const sv = (id,v) => { const el=document.getElementById(id); if(el) el.value=v||''; };
+  sv('f_bol_number',d.bol_number); sv('f_date',d.date); sv('f_pro_number',d.pro_number);
+  sv('f_po_number',d.po_number); sv('f_pickup_date',d.pickup_date);
+  const s=d.shipper||{}; sv('f_s_name',s.name); sv('f_s_address',s.address); sv('f_s_city',s.city); sv('f_s_state',s.state); sv('f_s_zip',s.zip); sv('f_s_phone',s.phone);
+  const c=d.consignee||{}; sv('f_c_name',c.name); sv('f_c_address',c.address); sv('f_c_city',c.city); sv('f_c_state',c.state); sv('f_c_zip',c.zip); sv('f_c_phone',c.phone);
+  const cr=d.carrier||{}; sv('f_car_name',cr.name); sv('f_car_scac',cr.scac); sv('f_car_trailer',cr.trailer_number); sv('f_car_seal',cr.seal_number); sv('f_car_dot',cr.dot_number);
+  const bi=d.billing||{}; const bt=document.getElementById('f_billing_type'); if(bt) bt.value=bi.type||'Prepaid';
+  sv('f_freight_charges',bi.freight_charges); sv('f_declared_value',d.declared_value); sv('f_cod_amount',d.cod_amount); sv('f_special',d.special_instructions);
+  const ss=d.shipper_signature||{}; sv('sig-name-shipper',ss.name); sv('sig-title-shipper',ss.title);
+  const ds=d.driver_signature||{}; sv('sig-name-driver',ds.name); sv('sig-title-driver',ds.title);
+  rows = (d.items||[]).map(i=>({...i}));
+  renderItems();
+}
 
-/* ── Load sample ─────────────────────────────────────────────────────────── */
-document.getElementById('loadSample').addEventListener('click', () => {
-  jsonInput.value = JSON.stringify(SAMPLE, null, 2);
-  jsonInput.classList.remove('invalid');
-  shipperName.value = SAMPLE.shipper_signature.name;
-  driverName.value  = SAMPLE.driver_signature.name;
+document.getElementById('loadSample').addEventListener('click', ()=>{
+  document.getElementById('jsonInput').value = JSON.stringify(SAMPLE,null,2);
+  document.getElementById('jsonInput').classList.remove('invalid');
+  loadIntoForm(SAMPLE);
   setStatus('');
 });
 
-/* ── Signature preview ───────────────────────────────────────────────────── */
-let previewTimeout;
-sigUrlInput.addEventListener('input', () => {
-  clearTimeout(previewTimeout);
-  previewTimeout = setTimeout(() => updatePreview(sigUrlInput.value.trim()), 600);
-});
-
-function updatePreview(url) {
-  if (!url) {
-    sigPreview.innerHTML = '<span class="placeholder">Preview will appear here</span>';
-    return;
+// ── Gather data ───────────────────────────────────────────────────
+function gatherData() {
+  const activeTab = document.querySelector('.tab.active').dataset.tab;
+  if(activeTab==='json') {
+    try {
+      const d = JSON.parse(document.getElementById('jsonInput').value);
+      document.getElementById('jsonInput').classList.remove('invalid');
+      return d;
+    } catch {
+      document.getElementById('jsonInput').classList.add('invalid');
+      throw new Error('Invalid JSON — check your data');
+    }
   }
-  const img = document.createElement('img');
-  img.onload  = () => { sigPreview.innerHTML = ''; sigPreview.appendChild(img); };
-  img.onerror = () => {
-    sigPreview.innerHTML = '<span class="placeholder" style="color:#c0392b">Could not load image</span>';
+  const g = id => document.getElementById(id)?.value?.trim()||'';
+  return {
+    bol_number:g('f_bol_number'), date:g('f_date'), pro_number:g('f_pro_number'),
+    po_number:g('f_po_number'), pickup_date:g('f_pickup_date'),
+    shipper:{name:g('f_s_name'),address:g('f_s_address'),city:g('f_s_city'),state:g('f_s_state'),zip:g('f_s_zip'),phone:g('f_s_phone')},
+    consignee:{name:g('f_c_name'),address:g('f_c_address'),city:g('f_c_city'),state:g('f_c_state'),zip:g('f_c_zip'),phone:g('f_c_phone')},
+    carrier:{name:g('f_car_name'),scac:g('f_car_scac'),trailer_number:g('f_car_trailer'),seal_number:g('f_car_seal'),dot_number:g('f_car_dot')},
+    billing:{type:g('f_billing_type'),freight_charges:g('f_freight_charges')},
+    declared_value:g('f_declared_value'), cod_amount:g('f_cod_amount'),
+    special_instructions:g('f_special'),
+    items:rows,
+    shipper_signature:{name:g('sig-name-shipper'),title:g('sig-title-shipper')},
+    driver_signature:{name:g('sig-name-driver'),title:g('sig-title-driver')},
   };
-  img.src = url;
-  img.alt = 'Signature preview';
 }
 
-/* ── Colour helpers ─────────────────────────────────────────────────────── */
-const C = {
-  navy:  '#1B2A4A',
-  blue:  '#2E5090',
-  sky:   '#D6E4F7',
-  gold:  '#E8A020',
-  light: '#F4F5F7',
-  gray:  '#CBD0D8',
-  text:  '#1A1A2E',
-  muted: '#5A6478',
-  white: '#ffffff',
-  red:   '#C0392B',
-};
+// ── Status ────────────────────────────────────────────────────────
+function setStatus(msg,cls='') { const el=document.getElementById('status'); el.textContent=msg; el.className=cls; }
 
-function hex(c) { return c; }
+// ── PDF builder ───────────────────────────────────────────────────
+const C={navy:'#1B2A4A',blue:'#2E5090',sky:'#D6E4F7',gold:'#E8A020',light:'#F4F5F7',gray:'#CBD0D8',text:'#1A1A2E',muted:'#5A6478',white:'#ffffff',red:'#C0392B'};
 
-/* ── Load image as base64 ───────────────────────────────────────────────── */
-async function loadImageAsDataUrl(url) {
-  try {
-    const resp = await fetch(url);
-    if (!resp.ok) return null;
-    const blob = await resp.blob();
-    return await new Promise((res, rej) => {
-      const reader = new FileReader();
-      reader.onload  = () => res(reader.result);
-      reader.onerror = rej;
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    return null;
+async function buildPDF(data) {
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'letter',orientation:'portrait'});
+  const ML=36,MR=36,CW=612-ML-MR;
+
+  const fill=(x,y,w,h,c)=>{doc.setFillColor(c);doc.rect(x,y,w,h,'F');};
+  const ln  =(x1,y1,x2,y2,c,lw=0.4)=>{doc.setDrawColor(c);doc.setLineWidth(lw);doc.line(x1,y1,x2,y2);};
+  const bx  =(x,y,w,h,c,lw=0.4)=>{doc.setDrawColor(c);doc.setLineWidth(lw);doc.rect(x,y,w,h);};
+  const txt =(text,x,y,opts={})=>{
+    const{sz=8,color=C.text,bold=false,align='left',maxW}=opts;
+    doc.setFontSize(sz); doc.setTextColor(color); doc.setFont('helvetica',bold?'bold':'normal');
+    const o={align}; if(maxW) o.maxWidth=maxW;
+    doc.text(String(text??'—'),x,y,o);
+  };
+
+  const items  = data.items||[];
+  const pieces = items.reduce((a,i)=>a+(+i.quantity||0),0);
+  const weight = items.reduce((a,i)=>a+(+i.weight_lbs||0),0);
+
+  let cy=36;
+
+  // ── Header ──
+  fill(ML,cy,CW,58,C.navy);
+  fill(ML,cy+56,CW,2,C.gold);
+  txt('BILL OF LADING',ML+14,cy+36,{sz:22,color:C.white,bold:true});
+  txt('UNIFORM STRAIGHT',ML+14,cy+50,{sz:7,color:'#6a8ab0'});
+
+  const rf=ML+CW-268;
+  [['BOL NUMBER',data.bol_number||'—',rf,C.gold],
+   ['DATE',data.date||'—',rf+98,C.white],
+   ['PRO NUMBER',data.pro_number||'—',rf+168,C.white]
+  ].forEach(([l,v,x,vc])=>{
+    txt(l,x,cy+15,{sz:6,color:'#6a8ab0'});
+    txt(v,x,cy+29,{sz:9,color:vc,bold:true});
+  });
+  if(data.po_number||data.pickup_date){
+    txt('PO / REF #',rf,cy+42,{sz:6,color:'#6a8ab0'});
+    txt(data.po_number||'—',rf,cy+53,{sz:8,color:C.white});
+    txt('PICKUP',rf+98,cy+42,{sz:6,color:'#6a8ab0'});
+    txt(data.pickup_date||'—',rf+98,cy+53,{sz:8,color:C.white});
   }
-}
+  cy+=66;
 
-/* ── Set status ─────────────────────────────────────────────────────────── */
-function setStatus(msg, type = '') {
-  statusEl.textContent = msg;
-  statusEl.className = type;
-}
+  const secHdr=(label,extraNote='')=>{
+    txt('▸  '+label+(extraNote?' — '+extraNote:''),ML,cy+8,{sz:7,color:C.blue,bold:true});
+    cy+=14;
+  };
 
-/* ── Main PDF builder ───────────────────────────────────────────────────── */
-document.getElementById('generateBtn').addEventListener('click', async () => {
-  setStatus('Validating data…');
+  // ── Parties ──
+  secHdr('PARTIES');
+  const colW3=CW/3-3, pH=82;
 
-  // 1. Parse JSON
-  let data;
-  try {
-    data = JSON.parse(jsonInput.value);
-    jsonInput.classList.remove('invalid');
-  } catch (e) {
-    jsonInput.classList.add('invalid');
-    setStatus('❌ Invalid JSON — check your data and try again.', 'error');
-    return;
+  const drawParty=(x,title,p)=>{
+    fill(x,cy,colW3,14,C.blue); txt(title,x+5,cy+10,{sz:7,color:C.white,bold:true});
+    fill(x,cy+14,colW3,pH-14,C.white); bx(x,cy,colW3,pH,C.gray);
+    let py=cy+26;
+    txt(p.name||'',x+5,py,{sz:8.5,bold:true,maxW:colW3-10}); py+=12;
+    txt(p.address||'',x+5,py,{sz:7.5,color:C.muted,maxW:colW3-10}); py+=10;
+    txt(`${p.city||''}, ${p.state||''}  ${p.zip||''}`,x+5,py,{sz:7.5,color:C.muted}); py+=10;
+    if(p.phone) txt(p.phone,x+5,py,{sz:7,color:C.muted});
+  };
+
+  drawParty(ML,'SHIPPER / CONSIGNOR',data.shipper||{});
+  drawParty(ML+colW3+4.5,'CONSIGNEE / SHIP TO',data.consignee||{});
+
+  const cr=data.carrier||{}, bi=data.billing||{};
+  const cx3=ML+(colW3+4.5)*2;
+  fill(cx3,cy,colW3,14,C.blue); txt('CARRIER',cx3+5,cy+10,{sz:7,color:C.white,bold:true});
+  fill(cx3,cy+14,colW3,pH-14,C.white); bx(cx3,cy,colW3,pH,C.gray);
+  let cry=cy+26;
+  txt(cr.name||'—',cx3+5,cry,{sz:8.5,bold:true,maxW:colW3-10}); cry+=12;
+  txt(`SCAC: ${cr.scac||'—'}  DOT: ${cr.dot_number||'—'}`,cx3+5,cry,{sz:7,color:C.muted,maxW:colW3-10}); cry+=10;
+  txt(`Trailer: ${cr.trailer_number||'—'}  Seal: ${cr.seal_number||'—'}`,cx3+5,cry,{sz:7,color:C.muted}); cry+=10;
+  txt(`Billing: ${bi.type||'Prepaid'}${bi.freight_charges?' — '+bi.freight_charges:''}`,cx3+5,cry,{sz:7,color:C.muted,bold:true});
+  cy+=pH+8;
+
+  // ── Reference / Terms row ──
+  const refW=CW*0.56, termsW=CW*0.44-4;
+  fill(ML,cy,refW,13,C.sky); txt('SHIPMENT REFERENCE',ML+5,cy+9,{sz:7,color:C.blue,bold:true});
+  fill(ML,cy+13,refW,28,C.white); bx(ML,cy,refW,41,C.gray);
+  [[`Declared Value:`,'$'+(data.declared_value||'0'),'COD Amount:',data.cod_amount?'$'+data.cod_amount:'N/A'],
+   [`Total Pieces:`,String(pieces),'Total Weight:',weight.toLocaleString()+' lbs']].forEach(([l1,v1,l2,v2],ri)=>{
+    const ry=cy+22+ri*13;
+    txt(l1,ML+5,ry,{sz:7,color:C.muted}); txt(v1,ML+72,ry,{sz:7.5,bold:true});
+    txt(l2,ML+refW/2,ry,{sz:7,color:C.muted}); txt(v2,ML+refW/2+72,ry,{sz:7.5,bold:true});
+  });
+
+  const tx=ML+refW+4;
+  fill(tx,cy,termsW,13,C.sky); txt('FREIGHT TERMS',tx+5,cy+9,{sz:7,color:C.blue,bold:true});
+  fill(tx,cy+13,termsW,28,C.white); bx(tx,cy,termsW,41,C.gray);
+  ['Prepaid','Collect','Third Party','C.O.D.'].forEach((term,i)=>{
+    const checked=(bi.type||'Prepaid')===term;
+    const fx=tx+8+(i%2)*(termsW/2), fy=cy+22+Math.floor(i/2)*13;
+    bx(fx,fy-7,8,8,C.gray);
+    if(checked) fill(fx+1,fy-6,6,6,C.navy);
+    txt(term,fx+11,fy,{sz:7.5,color:checked?C.text:C.muted,bold:checked});
+  });
+  cy+=49;
+
+  // ── Special instructions ──
+  const sp=data.special_instructions||'';
+  if(sp){
+    fill(ML,cy,CW,13,C.sky); txt('SPECIAL INSTRUCTIONS / HANDLING REQUIREMENTS',ML+5,cy+9,{sz:7,color:C.blue,bold:true});
+    fill(ML,cy+13,CW,22,C.white); bx(ML,cy,CW,35,C.gray);
+    doc.setFontSize(7.5); doc.setTextColor(C.text); doc.setFont('helvetica','normal');
+    doc.text(doc.splitTextToSize(sp,CW-10).slice(0,2),ML+5,cy+23);
+    cy+=43;
   }
 
-  // 2. Apply name overrides from the form
-  const sigUrl = sigUrlInput.value.trim();
-  if (!data.shipper_signature) data.shipper_signature = {};
-  if (!data.driver_signature)  data.driver_signature  = {};
-  if (shipperName.value.trim()) data.shipper_signature.name = shipperName.value.trim();
-  if (driverName.value.trim())  data.driver_signature.name  = driverName.value.trim();
-  if (sigUrl) {
-    data.shipper_signature.image_url = sigUrl;
-    data.driver_signature.image_url  = sigUrl;
-  }
+  // ── Items table ──
+  secHdr('COMMODITY DESCRIPTION','Carrier not responsible for contents of sealed containers');
 
-  setStatus('Fetching signature image…');
-  const sigDataUrl = sigUrl ? await loadImageAsDataUrl(sigUrl) : null;
-  if (sigUrl && !sigDataUrl) {
-    setStatus('⚠️ Could not load signature image — PDF will include blank signature line.', '');
-  }
+  const tBody=items.map(item=>[
+    item.description||'',
+    String(item.quantity??''),
+    item.unit||'',
+    `${(+item.weight_lbs||0).toLocaleString()}`,
+    String(item.class||''),
+    item.nmfc||'',
+    item.hazmat?'⬥ HM':'',
+  ]);
+  tBody.push(['TOTALS',String(pieces),'',`${weight.toLocaleString()} lbs`,'','','']);
 
-  setStatus('Building PDF…');
+  doc.autoTable({
+    startY:cy,
+    head:[['DESCRIPTION / SPECIAL MARKS','QTY','UNIT','WEIGHT','CLASS','NMFC #','HM']],
+    body:tBody,
+    margin:{left:ML,right:MR},
+    tableWidth:CW,
+    styles:{fontSize:7.5,cellPadding:{top:3,bottom:3,left:4,right:3},textColor:C.text,font:'helvetica',lineColor:C.gray,lineWidth:0.3},
+    headStyles:{fillColor:C.navy,textColor:C.white,fontStyle:'bold',fontSize:7,minCellHeight:13},
+    alternateRowStyles:{fillColor:'#F4F5F7'},
+    columnStyles:{
+      0:{cellWidth:CW*0.36},1:{cellWidth:CW*0.07,halign:'center'},2:{cellWidth:CW*0.10},
+      3:{cellWidth:CW*0.12,halign:'right'},4:{cellWidth:CW*0.08,halign:'center'},
+      5:{cellWidth:CW*0.12},6:{cellWidth:CW*0.09,halign:'center'},
+    },
+    didParseCell(d){
+      if(d.row.index===tBody.length-1){d.cell.styles.fillColor=C.sky;d.cell.styles.fontStyle='bold';d.cell.styles.textColor=C.navy;}
+      if(d.column.index===6&&d.cell.raw==='⬥ HM'){d.cell.styles.textColor=C.red;d.cell.styles.fontStyle='bold';}
+    },
+  });
+  cy=doc.lastAutoTable.finalY+8;
 
-  try {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
+  // ── Certification notice ──
+  const cert='This is to certify that the above named materials are properly classified, described, packaged, marked and labeled, and are in proper condition for transportation according to the applicable regulations of the U.S. DOT.';
+  fill(ML,cy,CW,24,'#FFFBE6'); bx(ML,cy,CW,24,C.gold,0.6);
+  doc.setFontSize(6.5); doc.setTextColor(C.muted); doc.setFont('helvetica','normal');
+  doc.text(doc.splitTextToSize(cert,CW-10),ML+5,cy+9);
+  cy+=30;
 
-    const PW = 612, PH = 792;
-    const ML = 36, MR = 36, MT = 36;
-    const CW = PW - ML - MR;
+  // ── Signatures ──
+  secHdr('SIGNATURES','Required for legal validity per 49 CFR § 373.101');
+  const sigW=CW/2-4, sigH=92;
 
-    // ── Helper fns ──────────────────────────────────────────────────────
-    const fillRect  = (x,y,w,h,c)  => { doc.setFillColor(c);   doc.rect(x,y,w,h,'F'); };
-    const strokeLine= (x1,y1,x2,y2,c,lw=0.5) => {
-      doc.setDrawColor(c); doc.setLineWidth(lw); doc.line(x1,y1,x2,y2);
-    };
-    const txt = (text, x, y, opts = {}) => {
-      const { size=9, color=C.text, font='helvetica', style='normal',
-              align='left', maxWidth } = opts;
-      doc.setFontSize(size); doc.setTextColor(color);
-      doc.setFont(font, style);
-      if (maxWidth) doc.text(String(text??'—'), x, y, { align, maxWidth });
-      else          doc.text(String(text??'—'), x, y, { align });
-    };
+  const drawSigBox=async(x,title,sData,imgDataUrl)=>{
+    fill(x,cy,sigW,14,C.blue); txt(title,x+4,cy+10,{sz:6.5,color:C.white,bold:true});
+    fill(x,cy+14,sigW,sigH-14,C.white); bx(x,cy,sigW,sigH,C.gray);
 
-    let cy = MT; // current Y
-
-    // ── 1. Header banner ────────────────────────────────────────────────
-    const HH = 52;
-    fillRect(ML, cy, CW, HH, C.navy);
-    fillRect(ML, cy + HH - 2, CW, 2, C.gold);
-
-    txt('BILL OF LADING', ML + 14, cy + 32, { size:20, color:C.white, font:'helvetica', style:'bold' });
-
-    const rfx = ML + CW - 240;
-    txt('BOL NUMBER',  rfx,       cy + 14, { size:7, color:'#A8C0DE' });
-    txt('DATE',        rfx + 90,  cy + 14, { size:7, color:'#A8C0DE' });
-    txt('PRO NUMBER',  rfx + 160, cy + 14, { size:7, color:'#A8C0DE' });
-    txt(data.bol_number||'—', rfx,       cy + 28, { size:9.5, color:C.gold, style:'bold' });
-    txt(data.date||'—',       rfx + 90,  cy + 28, { size:9.5, color:C.white, style:'bold' });
-    txt(data.pro_number||'—', rfx + 160, cy + 28, { size:9.5, color:C.white, style:'bold' });
-
-    cy += HH + 10;
-
-    // ── 2. Section label helper ──────────────────────────────────────────
-    const sectionLabel = (label, y) => {
-      txt('▸  ' + label, ML, y + 8, { size:7.5, color:C.blue, style:'bold' });
-      return y + 14;
-    };
-
-    // ── 3. Parties ────────────────────────────────────────────────────────
-    cy = sectionLabel('PARTIES', cy);
-
-    const colW3 = CW / 3 - 3;
-    const partyBoxH = 90;
-
-    const drawPartyBox = (x, title, party) => {
-      fillRect(x, cy, colW3, 16, C.blue);
-      txt(title, x + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
-      fillRect(x, cy + 16, colW3, partyBoxH - 16, C.white);
-      doc.setDrawColor(C.gray); doc.setLineWidth(0.4);
-      doc.rect(x, cy, colW3, partyBoxH);
-
-      let py = cy + 28;
-      const lx = x + 6;
-      txt(party.name||'',    lx, py, { size:8.5, style:'bold', maxWidth: colW3 - 10 }); py += 13;
-      txt(party.address||'', lx, py, { size:7.5, color:C.muted, maxWidth: colW3 - 10 }); py += 11;
-      txt(`${party.city||''}, ${party.state||''}  ${party.zip||''}`, lx, py,
-          { size:7.5, color:C.muted }); py += 11;
-      txt(party.phone||'', lx, py, { size:7, color:C.muted });
-    };
-
-    const shipper   = data.shipper   || {};
-    const consignee = data.consignee || {};
-    const carrier   = data.carrier   || {};
-    const billing   = data.billing   || {};
-
-    drawPartyBox(ML,               'SHIPPER',    shipper);
-    drawPartyBox(ML + colW3 + 4.5, 'CONSIGNEE',  consignee);
-
-    // Carrier box
-    const cx3 = ML + (colW3 + 4.5) * 2;
-    fillRect(cx3, cy, colW3, 16, C.blue);
-    txt('CARRIER', cx3 + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
-    fillRect(cx3, cy + 16, colW3, partyBoxH - 16, C.white);
-    doc.setDrawColor(C.gray); doc.setLineWidth(0.4); doc.rect(cx3, cy, colW3, partyBoxH);
-    let cy3 = cy + 28;
-    txt(carrier.name||'',                     cx3+6, cy3, { size:8.5, style:'bold', maxWidth: colW3-10 }); cy3+=13;
-    txt(`SCAC: ${carrier.scac||'—'}`,          cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
-    txt(`Trailer: ${carrier.trailer_number||'—'}`, cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
-    txt(`Seal: ${carrier.seal_number||'—'}`,   cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
-    txt(`Billing: ${billing.type||'—'}`,       cx3+6, cy3, { size:7.5, color:C.muted });
-
-    cy += partyBoxH + 10;
-
-    // ── 4. Special instructions ──────────────────────────────────────────
-    const special = data.special_instructions || '';
-    if (special) {
-      fillRect(ML, cy, CW, 13, C.sky);
-      txt('SPECIAL INSTRUCTIONS / REMARKS', ML + 6, cy + 9,
-          { size:7.5, color:C.blue, style:'bold' });
-      cy += 13;
-      fillRect(ML, cy, CW, 26, C.white);
-      doc.setDrawColor(C.gray); doc.setLineWidth(0.4); doc.rect(ML, cy - 13, CW, 39);
-      doc.setFontSize(8); doc.setTextColor(C.text); doc.setFont('helvetica','normal');
-      const lines = doc.splitTextToSize(special, CW - 12);
-      doc.text(lines, ML + 6, cy + 10);
-      cy += 28;
-      cy += 6;
+    if(imgDataUrl){
+      try{
+        const imgType=imgDataUrl.startsWith('data:image/png')?'PNG':imgDataUrl.startsWith('data:image/svg')?'SVG':'JPEG';
+        // Fit image in sig area with aspect ratio preservation
+        doc.addImage(imgDataUrl,imgType,x+6,cy+16,sigW-12,50,undefined,'FAST');
+      } catch {
+        ln(x+8,cy+52,x+sigW-8,cy+52,C.gray);
+        txt('[signature image error]',x+10,cy+48,{sz:7,color:C.muted});
+      }
+    } else {
+      ln(x+8,cy+54,x+sigW-8,cy+54,C.gray,0.5);
+      txt('X',x+8,cy+50,{sz:10,color:C.gray,bold:true});
     }
 
-    // ── 5. Items table ───────────────────────────────────────────────────
-    cy = sectionLabel('COMMODITY DESCRIPTION', cy);
+    ln(x+8,cy+66,x+sigW-8,cy+66,C.gray,0.3);
+    txt(sData.name||'',x+8,cy+76,{sz:8,bold:true});
+    txt(sData.title||'',x+8,cy+86,{sz:7,color:C.muted});
+    txt('Date: '+(data.date||'___________'),x+sigW-8,cy+86,{sz:7,color:C.muted,align:'right'});
+  };
 
-    const items = (data.items || []).map(item => [
-      item.description || '',
-      String(item.quantity ?? ''),
-      item.unit || '',
-      (item.weight_lbs ?? 0).toLocaleString(),
-      String(item.class || ''),
-      item.nmfc || '',
-      item.hazmat ? '⬥ HAZMAT' : '—',
-    ]);
+  await drawSigBox(ML,'SHIPPER CERTIFICATION — I certify the above is true and correct',data.shipper_signature||{},sigData.shipper);
+  await drawSigBox(ML+sigW+8,'CARRIER RECEIPT — Received in apparent good order except as noted',data.driver_signature||{},sigData.driver);
+  cy+=sigH+8;
 
-    const totals = data.totals || {};
-    items.push([
-      'TOTALS',
-      String(totals.total_pieces ?? ''),
-      '',
-      (totals.total_weight_lbs ?? 0).toLocaleString(),
-      '', '', '',
-    ]);
+  // ── Consignee delivery receipt ──
+  const conH=50;
+  fill(ML,cy,CW,13,C.blue); txt('CONSIGNEE DELIVERY RECEIPT — Signature acknowledges receipt of goods in apparent good order except as noted',ML+5,cy+9,{sz:6.5,color:C.white,bold:true});
+  fill(ML,cy+13,CW,conH-13,C.white); bx(ML,cy,CW,conH,C.gray);
+  ln(ML+8,cy+35,ML+CW/2-4,cy+35,C.gray,0.5);
+  txt('Received by (Print):',ML+8,cy+31,{sz:6.5,color:C.muted});
+  ln(ML+CW/2+4,cy+35,ML+CW*0.75,cy+35,C.gray,0.5);
+  txt('Date / Time:',ML+CW/2+4,cy+31,{sz:6.5,color:C.muted});
+  ln(ML+8,cy+47,ML+CW/2-4,cy+47,C.gray,0.3);
+  txt('Consignee Signature:',ML+8,cy+43,{sz:6.5,color:C.muted});
+  txt('Exceptions / Damage noted:',ML+CW/2+4,cy+43,{sz:6.5,color:C.muted});
+  cy+=conH+8;
 
-    doc.autoTable({
-      startY: cy,
-      head: [['DESCRIPTION', 'QTY', 'UNIT', 'WEIGHT (LBS)', 'CLASS', 'NMFC', 'HAZMAT']],
-      body: items,
-      margin: { left: ML, right: MR },
-      tableWidth: CW,
-      styles: {
-        fontSize: 8,
-        cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
-        textColor: C.text,
-        font: 'helvetica',
-        lineColor: C.gray,
-        lineWidth: 0.3,
-      },
-      headStyles: {
-        fillColor: C.navy,
-        textColor: C.white,
-        fontStyle: 'bold',
-        fontSize: 7.5,
-      },
-      alternateRowStyles: { fillColor: '#F4F5F7' },
-      columnStyles: {
-        0: { cellWidth: CW * 0.34 },
-        1: { cellWidth: CW * 0.08, halign: 'center' },
-        2: { cellWidth: CW * 0.09 },
-        3: { cellWidth: CW * 0.13, halign: 'right' },
-        4: { cellWidth: CW * 0.08, halign: 'center' },
-        5: { cellWidth: CW * 0.12 },
-        6: { cellWidth: CW * 0.16, halign: 'center' },
-      },
-      didParseCell(d) {
-        // Totals row style
-        if (d.row.index === items.length - 1) {
-          d.cell.styles.fillColor = C.sky;
-          d.cell.styles.fontStyle = 'bold';
-          d.cell.styles.textColor = C.navy;
-        }
-        // Hazmat cell
-        if (d.column.index === 6 && d.cell.raw === '⬥ HAZMAT') {
-          d.cell.styles.textColor = '#C0392B';
-          d.cell.styles.fontStyle = 'bold';
-        }
-      },
-    });
+  // ── Legal footer ──
+  ln(ML,cy,ML+CW,cy,C.gray);
+  cy+=5;
+  const foot='RECEIVED, subject to classifications and tariffs in effect on the date of issue of this Bill of Lading, the property described herein in apparent good order except as noted. Carrier agrees to carry to its usual place of delivery per applicable tariff. Subject to 49 U.S.C. § 14706 (Carmack Amendment) — liability limited per released value declared above. Claims must be filed within 9 months of delivery date. Civil action must be commenced within 2 years of written denial of claim. Electronic signatures are legally valid per E-SIGN Act (15 U.S.C. § 7001).';
+  doc.setFontSize(5.5); doc.setTextColor(C.muted); doc.setFont('helvetica','normal');
+  doc.text(doc.splitTextToSize(foot,CW),ML,cy);
+  cy+=16;
+  txt(`Generated: ${new Date().toLocaleString()}  |  BOL: ${data.bol_number||''}  |  Prepared electronically`,ML,cy,{sz:6,color:C.gray});
 
-    cy = doc.lastAutoTable.finalY + 10;
+  return doc;
+}
 
-    // ── 6. Signatures ────────────────────────────────────────────────────
-    cy = sectionLabel('SIGNATURES', cy);
+// ── Preview & Download ────────────────────────────────────────────
+let currentDoc=null;
 
-    const sigBoxW = CW / 2 - 4;
-    const sigBoxH = 90;
+document.getElementById('generateBtn').addEventListener('click',async()=>{
+  setStatus('Building PDF…');
+  document.getElementById('generateBtn').disabled=true;
+  try{
+    const data=gatherData();
+    // Merge sig names from sig section into data
+    data.shipper_signature = data.shipper_signature || {};
+    data.driver_signature  = data.driver_signature  || {};
+    const n=s=>document.getElementById('sig-name-'+s)?.value?.trim();
+    const ti=s=>document.getElementById('sig-title-'+s)?.value?.trim();
+    if(n('shipper')) data.shipper_signature.name=n('shipper');
+    if(ti('shipper')) data.shipper_signature.title=ti('shipper');
+    if(n('driver')) data.driver_signature.name=n('driver');
+    if(ti('driver')) data.driver_signature.title=ti('driver');
 
-    const drawSigBox = async (x, title, sigData, imgDataUrl) => {
-      fillRect(x, cy, sigBoxW, 16, C.blue);
-      txt(title, x + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
-      fillRect(x, cy + 16, sigBoxW, sigBoxH - 16, C.white);
-      doc.setDrawColor(C.gray); doc.setLineWidth(0.4);
-      doc.rect(x, cy, sigBoxW, sigBoxH);
+    const doc=await buildPDF(data);
+    currentDoc=doc;
 
-      if (imgDataUrl) {
-        try {
-          doc.addImage(imgDataUrl, 'PNG', x + 8, cy + 20, sigBoxW - 16, 36, undefined, 'FAST');
-        } catch {
-          strokeLine(x + 8, cy + 44, x + sigBoxW - 8, cy + 44, C.gray);
-        }
-      } else {
-        strokeLine(x + 8, cy + 44, x + sigBoxW - 8, cy + 44, C.gray);
-      }
+    const container=document.getElementById('previewContainer');
+    const ph=document.getElementById('prevPh');
+    if(ph) ph.style.display='none';
+    container.innerHTML='';
 
-      strokeLine(x + 8, cy + 60, x + sigBoxW - 8, cy + 60, C.gray, 0.3);
-      txt(sigData.name  || '', x + 8, cy + 72, { size:8.5, style:'bold' });
-      txt(sigData.title || '', x + 8, cy + 83, { size:7.5, color:C.muted });
-    };
+    const iframe=document.createElement('iframe');
+    iframe.style.cssText='width:612px;height:792px;border:none;box-shadow:0 4px 20px rgba(0,0,0,.45);border-radius:2px;background:white';
+    iframe.src=doc.output('dataurlstring');
+    container.appendChild(iframe);
 
-    await drawSigBox(ML,               'SHIPPER SIGNATURE',          data.shipper_signature||{}, sigDataUrl);
-    await drawSigBox(ML + sigBoxW + 8, 'CARRIER / DRIVER SIGNATURE', data.driver_signature||{},  sigDataUrl);
-
-    cy += sigBoxH + 10;
-
-    // ── 7. Footer ────────────────────────────────────────────────────────
-    strokeLine(ML, cy, ML + CW, cy, C.gray);
-    cy += 8;
-    const footerText =
-      'This Bill of Lading is a contract of carriage between the shipper and carrier. ' +
-      'Subject to applicable tariff rules and NMFC classifications. ' +
-      'Received in apparent good order except as noted. ' +
-      '49 U.S.C. § 14706 liability limitations may apply.';
-    doc.setFontSize(6.5); doc.setTextColor(C.muted); doc.setFont('helvetica','normal');
-    const fLines = doc.splitTextToSize(footerText, CW);
-    doc.text(fLines, ML, cy);
-    cy += fLines.length * 8 + 4;
-    txt(`Generated: ${new Date().toLocaleString()}  |  BOL: ${data.bol_number||''}`,
-        ML, cy, { size:6, color:C.gray });
-
-    // ── Save ─────────────────────────────────────────────────────────────
-    const filename = `BOL_${(data.bol_number||'document').replace(/[^a-zA-Z0-9-]/g,'_')}.pdf`;
-    doc.save(filename);
-    setStatus(`✓ PDF downloaded: ${filename}`, 'success');
-
-  } catch (err) {
-    console.error(err);
-    setStatus('❌ Error building PDF: ' + err.message, 'error');
+    document.getElementById('pgInfo').textContent='1 page · Letter';
+    document.getElementById('downloadBtn').classList.add('show');
+    setStatus('✓ Preview ready','ok');
+  } catch(e){
+    setStatus('❌ '+e.message,'err');
+    console.error(e);
   }
+  document.getElementById('generateBtn').disabled=false;
 });
+
+document.getElementById('downloadBtn').addEventListener('click',()=>{
+  if(!currentDoc) return;
+  let data; try{data=gatherData();}catch{data={};}
+  const fname=`BOL_${(data.bol_number||'document').replace(/[^a-zA-Z0-9-]/g,'_')}.pdf`;
+  currentDoc.save(fname);
+  setStatus('✓ Downloaded: '+fname,'ok');
+});
+
+// ── Init with sample ──────────────────────────────────────────────
+loadIntoForm(SAMPLE);
+document.getElementById('jsonInput').value=JSON.stringify(SAMPLE,null,2);
+renderItems();
 </script>
 </body>
 </html>
