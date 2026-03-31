@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BOL PDF Generator — Live Demo</title>
+
+<!-- jsPDF + AutoTable (no server required) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  /* ── Reset & base ─────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #1B2A4A;
+    --blue:   #2E5090;
+    --sky:    #D6E4F7;
+    --gold:   #E8A020;
+    --light:  #F4F5F7;
+    --gray:   #CBD0D8;
+    --text:   #1A1A2E;
+    --muted:  #5A6478;
+    --white:  #ffffff;
+    --radius: 10px;
+  }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--light);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ───────────────────────────────────────────────────────────── */
+  header {
+    background: var(--navy);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 3px solid var(--gold);
+  }
+  header .logo {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--sky);
+    line-height: 1.5;
+  }
+  header h1 {
+    font-size: 26px;
+    color: var(--white);
+    letter-spacing: -0.02em;
+    font-weight: normal;
+  }
+  header h1 span { color: var(--gold); font-weight: bold; }
+  header .badge {
+    margin-left: auto;
+    background: var(--gold);
+    color: var(--navy);
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 0.12em;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  .container { max-width: 1080px; margin: 0 auto; padding: 40px 20px 60px; }
+
+  .intro {
+    background: var(--white);
+    border-left: 4px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 32px;
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .intro strong { color: var(--navy); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+  /* ── Cards ────────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray);
+    overflow: hidden;
+  }
+  .card-header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 12px 18px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-header .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: inline-block;
+  }
+  .card-body { padding: 16px 18px; }
+
+  /* ── Form elements ────────────────────────────────────────────────────── */
+  label {
+    display: block;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+    margin-top: 14px;
+  }
+  label:first-child { margin-top: 0; }
+
+  textarea, input[type="text"], input[type="url"] {
+    width: 100%;
+    border: 1.5px solid var(--gray);
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+    background: var(--light);
+    outline: none;
+    transition: border-color 0.15s;
+    resize: vertical;
+  }
+  textarea:focus, input:focus { border-color: var(--blue); background: var(--white); }
+
+  textarea.json-area { height: 340px; font-size: 12px; }
+
+  .sig-preview {
+    margin-top: 10px;
+    background: var(--light);
+    border: 1.5px dashed var(--gray);
+    border-radius: 6px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .sig-preview img { max-height: 72px; max-width: 100%; object-fit: contain; }
+  .sig-preview .placeholder { font-size: 12px; color: var(--muted); font-style: italic; }
+
+  /* ── Generate button ──────────────────────────────────────────────────── */
+  .generate-wrap { margin-top: 28px; text-align: center; }
+  button#generateBtn {
+    background: var(--navy);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    padding: 16px 44px;
+    font-size: 15px;
+    font-family: 'Georgia', serif;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 3px 12px rgba(27,42,74,0.25);
+  }
+  button#generateBtn:hover { background: var(--blue); transform: translateY(-1px); }
+  button#generateBtn:active { transform: translateY(0); }
+  button#generateBtn .icon { font-size: 20px; }
+
+  /* ── Status ───────────────────────────────────────────────────────────── */
+  #status {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    min-height: 20px;
+    text-align: center;
+  }
+  #status.error { color: #c0392b; font-style: normal; }
+  #status.success { color: #1a6b3a; font-style: normal; }
+
+  /* ── JSON error highlight ─────────────────────────────────────────────── */
+  textarea.json-area.invalid { border-color: #c0392b; background: #fff8f8; }
+
+  /* ── How it works ─────────────────────────────────────────────────────── */
+  .how {
+    margin-top: 36px;
+    background: var(--white);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray);
+    padding: 24px 28px;
+  }
+  .how h2 {
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 16px;
+  }
+  .steps { display: flex; gap: 24px; flex-wrap: wrap; }
+  .step {
+    flex: 1; min-width: 180px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .step-num {
+    width: 28px; height: 28px;
+    background: var(--gold);
+    color: var(--navy);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .step-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .step-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+  /* ── Footer ───────────────────────────────────────────────────────────── */
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray);
+    font-family: 'Courier New', monospace;
+    padding-bottom: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <div class="logo">Freight Document Suite</div>
+    <h1>Bill of Lading <span>Generator</span></h1>
+  </div>
+  <div class="badge">⚡ Client-Side Demo</div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <strong>This demo runs entirely in your browser — no server, no uploads.</strong>
+    Paste your BOL JSON data below, provide a link to a signature image, and click
+    <em>Generate PDF</em>. The PDF is built on-the-fly using the same data structure
+    your system already produces.
+  </div>
+
+  <div class="grid">
+
+    <!-- Left: JSON input -->
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>BOL JSON Data</div>
+      <div class="card-body">
+        <label>Paste your JSON payload</label>
+        <textarea class="json-area" id="jsonInput" spellcheck="false"></textarea>
+        <label style="margin-top:10px">
+          <button id="loadSample" style="
+            background:none; border:1px solid var(--gold); color:var(--gold);
+            border-radius:4px; padding:4px 10px; font-size:11px;
+            font-family:'Courier New',monospace; letter-spacing:0.08em;
+            cursor:pointer; text-transform:uppercase;">
+            Load sample data
+          </button>
+        </label>
+      </div>
+    </div>
+
+    <!-- Right: Signature -->
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>Signature Image</div>
+      <div class="card-body">
+        <label>Signature image URL</label>
+        <input type="url" id="sigUrl"
+          placeholder="https://example.com/signature.png" />
+
+        <div class="sig-preview" id="sigPreview">
+          <span class="placeholder">Preview will appear here</span>
+        </div>
+
+        <div style="margin-top:14px; font-size:12px; color:var(--muted); line-height:1.6">
+          Supports PNG, JPG, or SVG. The URL is fetched client-side and embedded
+          directly into the PDF — no data leaves your browser.
+        </div>
+
+        <hr style="margin:16px 0; border:none; border-top:1px solid var(--gray)" />
+
+        <label>Shipper name</label>
+        <input type="text" id="shipperName" placeholder="e.g. James Thornton" />
+
+        <label>Driver / Carrier name</label>
+        <input type="text" id="driverName" placeholder="e.g. Maria Gonzalez" />
+      </div>
+    </div>
+
+  </div>
+
+  <div class="generate-wrap">
+    <button id="generateBtn">
+      <span class="icon">📄</span> Generate &amp; Download PDF
+    </button>
+    <div id="status"></div>
+  </div>
+
+  <!-- How it works -->
+  <div class="how">
+    <h2>▸ How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <strong>Your JSON</strong>
+          Your existing form data is the input — no reformatting needed.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <strong>Signature URL</strong>
+          A link to a captured signature image is fetched and embedded.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <strong>PDF built in-browser</strong>
+          jsPDF renders the BOL layout entirely client-side.
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">
+          <strong>Instant download</strong>
+          The finished PDF is offered for download — zero server round-trips.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>BOL PDF Generator Demo — built with jsPDF · No data stored or transmitted</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ── Sample data ─────────────────────────────────────────────────────────── */
+const SAMPLE = {
+  "bol_number": "BOL-2024-00847",
+  "date": "2024-03-31",
+  "pro_number": "PRO-112938",
+  "shipper": {
+    "name": "Acme Manufacturing Co.",
+    "address": "1450 Industrial Blvd",
+    "city": "Atlanta", "state": "GA", "zip": "30301",
+    "phone": "(404) 555-0192"
+  },
+  "consignee": {
+    "name": "Global Distribution LLC",
+    "address": "8820 Commerce Drive",
+    "city": "Dallas", "state": "TX", "zip": "75201",
+    "phone": "(214) 555-0374"
+  },
+  "carrier": {
+    "name": "Swift Freight Solutions",
+    "scac": "SWFS",
+    "trailer_number": "TR-48821",
+    "seal_number": "SL-99201"
+  },
+  "billing": { "type": "Prepaid" },
+  "special_instructions": "Handle with care. Temperature-sensitive materials. Keep above 40°F.",
+  "items": [
+    {
+      "description": "Industrial Motors - Model XT-400",
+      "quantity": 12, "unit": "Pallets",
+      "weight_lbs": 4800, "class": "85",
+      "nmfc": "114-700", "hazmat": false
+    },
+    {
+      "description": "Control Panel Units - Series B",
+      "quantity": 6, "unit": "Crates",
+      "weight_lbs": 1560, "class": "92.5",
+      "nmfc": "103-420", "hazmat": false
+    },
+    {
+      "description": "Hydraulic Fluid Drums",
+      "quantity": 4, "unit": "Drums",
+      "weight_lbs": 1200, "class": "60",
+      "nmfc": "081-120", "hazmat": true
+    }
+  ],
+  "totals": { "total_pieces": 22, "total_weight_lbs": 7560 },
+  "shipper_signature": { "name": "James Thornton", "title": "Shipping Manager" },
+  "driver_signature":  { "name": "Maria Gonzalez",  "title": "Driver" }
+};
+
+/* ── DOM refs ────────────────────────────────────────────────────────────── */
+const jsonInput   = document.getElementById('jsonInput');
+const sigUrlInput = document.getElementById('sigUrl');
+const sigPreview  = document.getElementById('sigPreview');
+const shipperName = document.getElementById('shipperName');
+const driverName  = document.getElementById('driverName');
+const statusEl    = document.getElementById('status');
+
+/* ── Load sample ─────────────────────────────────────────────────────────── */
+document.getElementById('loadSample').addEventListener('click', () => {
+  jsonInput.value = JSON.stringify(SAMPLE, null, 2);
+  jsonInput.classList.remove('invalid');
+  shipperName.value = SAMPLE.shipper_signature.name;
+  driverName.value  = SAMPLE.driver_signature.name;
+  setStatus('');
+});
+
+/* ── Signature preview ───────────────────────────────────────────────────── */
+let previewTimeout;
+sigUrlInput.addEventListener('input', () => {
+  clearTimeout(previewTimeout);
+  previewTimeout = setTimeout(() => updatePreview(sigUrlInput.value.trim()), 600);
+});
+
+function updatePreview(url) {
+  if (!url) {
+    sigPreview.innerHTML = '<span class="placeholder">Preview will appear here</span>';
+    return;
+  }
+  const img = document.createElement('img');
+  img.onload  = () => { sigPreview.innerHTML = ''; sigPreview.appendChild(img); };
+  img.onerror = () => {
+    sigPreview.innerHTML = '<span class="placeholder" style="color:#c0392b">Could not load image</span>';
+  };
+  img.src = url;
+  img.alt = 'Signature preview';
+}
+
+/* ── Colour helpers ─────────────────────────────────────────────────────── */
+const C = {
+  navy:  '#1B2A4A',
+  blue:  '#2E5090',
+  sky:   '#D6E4F7',
+  gold:  '#E8A020',
+  light: '#F4F5F7',
+  gray:  '#CBD0D8',
+  text:  '#1A1A2E',
+  muted: '#5A6478',
+  white: '#ffffff',
+  red:   '#C0392B',
+};
+
+function hex(c) { return c; }
+
+/* ── Load image as base64 ───────────────────────────────────────────────── */
+async function loadImageAsDataUrl(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) return null;
+    const blob = await resp.blob();
+    return await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload  = () => res(reader.result);
+      reader.onerror = rej;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+/* ── Set status ─────────────────────────────────────────────────────────── */
+function setStatus(msg, type = '') {
+  statusEl.textContent = msg;
+  statusEl.className = type;
+}
+
+/* ── Main PDF builder ───────────────────────────────────────────────────── */
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  setStatus('Validating data…');
+
+  // 1. Parse JSON
+  let data;
+  try {
+    data = JSON.parse(jsonInput.value);
+    jsonInput.classList.remove('invalid');
+  } catch (e) {
+    jsonInput.classList.add('invalid');
+    setStatus('❌ Invalid JSON — check your data and try again.', 'error');
+    return;
+  }
+
+  // 2. Apply name overrides from the form
+  const sigUrl = sigUrlInput.value.trim();
+  if (!data.shipper_signature) data.shipper_signature = {};
+  if (!data.driver_signature)  data.driver_signature  = {};
+  if (shipperName.value.trim()) data.shipper_signature.name = shipperName.value.trim();
+  if (driverName.value.trim())  data.driver_signature.name  = driverName.value.trim();
+  if (sigUrl) {
+    data.shipper_signature.image_url = sigUrl;
+    data.driver_signature.image_url  = sigUrl;
+  }
+
+  setStatus('Fetching signature image…');
+  const sigDataUrl = sigUrl ? await loadImageAsDataUrl(sigUrl) : null;
+  if (sigUrl && !sigDataUrl) {
+    setStatus('⚠️ Could not load signature image — PDF will include blank signature line.', '');
+  }
+
+  setStatus('Building PDF…');
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter', orientation: 'portrait' });
+
+    const PW = 612, PH = 792;
+    const ML = 36, MR = 36, MT = 36;
+    const CW = PW - ML - MR;
+
+    // ── Helper fns ──────────────────────────────────────────────────────
+    const fillRect  = (x,y,w,h,c)  => { doc.setFillColor(c);   doc.rect(x,y,w,h,'F'); };
+    const strokeLine= (x1,y1,x2,y2,c,lw=0.5) => {
+      doc.setDrawColor(c); doc.setLineWidth(lw); doc.line(x1,y1,x2,y2);
+    };
+    const txt = (text, x, y, opts = {}) => {
+      const { size=9, color=C.text, font='helvetica', style='normal',
+              align='left', maxWidth } = opts;
+      doc.setFontSize(size); doc.setTextColor(color);
+      doc.setFont(font, style);
+      if (maxWidth) doc.text(String(text??'—'), x, y, { align, maxWidth });
+      else          doc.text(String(text??'—'), x, y, { align });
+    };
+
+    let cy = MT; // current Y
+
+    // ── 1. Header banner ────────────────────────────────────────────────
+    const HH = 52;
+    fillRect(ML, cy, CW, HH, C.navy);
+    fillRect(ML, cy + HH - 2, CW, 2, C.gold);
+
+    txt('BILL OF LADING', ML + 14, cy + 32, { size:20, color:C.white, font:'helvetica', style:'bold' });
+
+    const rfx = ML + CW - 240;
+    txt('BOL NUMBER',  rfx,       cy + 14, { size:7, color:'#A8C0DE' });
+    txt('DATE',        rfx + 90,  cy + 14, { size:7, color:'#A8C0DE' });
+    txt('PRO NUMBER',  rfx + 160, cy + 14, { size:7, color:'#A8C0DE' });
+    txt(data.bol_number||'—', rfx,       cy + 28, { size:9.5, color:C.gold, style:'bold' });
+    txt(data.date||'—',       rfx + 90,  cy + 28, { size:9.5, color:C.white, style:'bold' });
+    txt(data.pro_number||'—', rfx + 160, cy + 28, { size:9.5, color:C.white, style:'bold' });
+
+    cy += HH + 10;
+
+    // ── 2. Section label helper ──────────────────────────────────────────
+    const sectionLabel = (label, y) => {
+      txt('▸  ' + label, ML, y + 8, { size:7.5, color:C.blue, style:'bold' });
+      return y + 14;
+    };
+
+    // ── 3. Parties ────────────────────────────────────────────────────────
+    cy = sectionLabel('PARTIES', cy);
+
+    const colW3 = CW / 3 - 3;
+    const partyBoxH = 90;
+
+    const drawPartyBox = (x, title, party) => {
+      fillRect(x, cy, colW3, 16, C.blue);
+      txt(title, x + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
+      fillRect(x, cy + 16, colW3, partyBoxH - 16, C.white);
+      doc.setDrawColor(C.gray); doc.setLineWidth(0.4);
+      doc.rect(x, cy, colW3, partyBoxH);
+
+      let py = cy + 28;
+      const lx = x + 6;
+      txt(party.name||'',    lx, py, { size:8.5, style:'bold', maxWidth: colW3 - 10 }); py += 13;
+      txt(party.address||'', lx, py, { size:7.5, color:C.muted, maxWidth: colW3 - 10 }); py += 11;
+      txt(`${party.city||''}, ${party.state||''}  ${party.zip||''}`, lx, py,
+          { size:7.5, color:C.muted }); py += 11;
+      txt(party.phone||'', lx, py, { size:7, color:C.muted });
+    };
+
+    const shipper   = data.shipper   || {};
+    const consignee = data.consignee || {};
+    const carrier   = data.carrier   || {};
+    const billing   = data.billing   || {};
+
+    drawPartyBox(ML,               'SHIPPER',    shipper);
+    drawPartyBox(ML + colW3 + 4.5, 'CONSIGNEE',  consignee);
+
+    // Carrier box
+    const cx3 = ML + (colW3 + 4.5) * 2;
+    fillRect(cx3, cy, colW3, 16, C.blue);
+    txt('CARRIER', cx3 + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
+    fillRect(cx3, cy + 16, colW3, partyBoxH - 16, C.white);
+    doc.setDrawColor(C.gray); doc.setLineWidth(0.4); doc.rect(cx3, cy, colW3, partyBoxH);
+    let cy3 = cy + 28;
+    txt(carrier.name||'',                     cx3+6, cy3, { size:8.5, style:'bold', maxWidth: colW3-10 }); cy3+=13;
+    txt(`SCAC: ${carrier.scac||'—'}`,          cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
+    txt(`Trailer: ${carrier.trailer_number||'—'}`, cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
+    txt(`Seal: ${carrier.seal_number||'—'}`,   cx3+6, cy3, { size:7.5, color:C.muted }); cy3+=11;
+    txt(`Billing: ${billing.type||'—'}`,       cx3+6, cy3, { size:7.5, color:C.muted });
+
+    cy += partyBoxH + 10;
+
+    // ── 4. Special instructions ──────────────────────────────────────────
+    const special = data.special_instructions || '';
+    if (special) {
+      fillRect(ML, cy, CW, 13, C.sky);
+      txt('SPECIAL INSTRUCTIONS / REMARKS', ML + 6, cy + 9,
+          { size:7.5, color:C.blue, style:'bold' });
+      cy += 13;
+      fillRect(ML, cy, CW, 26, C.white);
+      doc.setDrawColor(C.gray); doc.setLineWidth(0.4); doc.rect(ML, cy - 13, CW, 39);
+      doc.setFontSize(8); doc.setTextColor(C.text); doc.setFont('helvetica','normal');
+      const lines = doc.splitTextToSize(special, CW - 12);
+      doc.text(lines, ML + 6, cy + 10);
+      cy += 28;
+      cy += 6;
+    }
+
+    // ── 5. Items table ───────────────────────────────────────────────────
+    cy = sectionLabel('COMMODITY DESCRIPTION', cy);
+
+    const items = (data.items || []).map(item => [
+      item.description || '',
+      String(item.quantity ?? ''),
+      item.unit || '',
+      (item.weight_lbs ?? 0).toLocaleString(),
+      String(item.class || ''),
+      item.nmfc || '',
+      item.hazmat ? '⬥ HAZMAT' : '—',
+    ]);
+
+    const totals = data.totals || {};
+    items.push([
+      'TOTALS',
+      String(totals.total_pieces ?? ''),
+      '',
+      (totals.total_weight_lbs ?? 0).toLocaleString(),
+      '', '', '',
+    ]);
+
+    doc.autoTable({
+      startY: cy,
+      head: [['DESCRIPTION', 'QTY', 'UNIT', 'WEIGHT (LBS)', 'CLASS', 'NMFC', 'HAZMAT']],
+      body: items,
+      margin: { left: ML, right: MR },
+      tableWidth: CW,
+      styles: {
+        fontSize: 8,
+        cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+        textColor: C.text,
+        font: 'helvetica',
+        lineColor: C.gray,
+        lineWidth: 0.3,
+      },
+      headStyles: {
+        fillColor: C.navy,
+        textColor: C.white,
+        fontStyle: 'bold',
+        fontSize: 7.5,
+      },
+      alternateRowStyles: { fillColor: '#F4F5F7' },
+      columnStyles: {
+        0: { cellWidth: CW * 0.34 },
+        1: { cellWidth: CW * 0.08, halign: 'center' },
+        2: { cellWidth: CW * 0.09 },
+        3: { cellWidth: CW * 0.13, halign: 'right' },
+        4: { cellWidth: CW * 0.08, halign: 'center' },
+        5: { cellWidth: CW * 0.12 },
+        6: { cellWidth: CW * 0.16, halign: 'center' },
+      },
+      didParseCell(d) {
+        // Totals row style
+        if (d.row.index === items.length - 1) {
+          d.cell.styles.fillColor = C.sky;
+          d.cell.styles.fontStyle = 'bold';
+          d.cell.styles.textColor = C.navy;
+        }
+        // Hazmat cell
+        if (d.column.index === 6 && d.cell.raw === '⬥ HAZMAT') {
+          d.cell.styles.textColor = '#C0392B';
+          d.cell.styles.fontStyle = 'bold';
+        }
+      },
+    });
+
+    cy = doc.lastAutoTable.finalY + 10;
+
+    // ── 6. Signatures ────────────────────────────────────────────────────
+    cy = sectionLabel('SIGNATURES', cy);
+
+    const sigBoxW = CW / 2 - 4;
+    const sigBoxH = 90;
+
+    const drawSigBox = async (x, title, sigData, imgDataUrl) => {
+      fillRect(x, cy, sigBoxW, 16, C.blue);
+      txt(title, x + 6, cy + 11, { size:7.5, color:C.white, style:'bold' });
+      fillRect(x, cy + 16, sigBoxW, sigBoxH - 16, C.white);
+      doc.setDrawColor(C.gray); doc.setLineWidth(0.4);
+      doc.rect(x, cy, sigBoxW, sigBoxH);
+
+      if (imgDataUrl) {
+        try {
+          doc.addImage(imgDataUrl, 'PNG', x + 8, cy + 20, sigBoxW - 16, 36, undefined, 'FAST');
+        } catch {
+          strokeLine(x + 8, cy + 44, x + sigBoxW - 8, cy + 44, C.gray);
+        }
+      } else {
+        strokeLine(x + 8, cy + 44, x + sigBoxW - 8, cy + 44, C.gray);
+      }
+
+      strokeLine(x + 8, cy + 60, x + sigBoxW - 8, cy + 60, C.gray, 0.3);
+      txt(sigData.name  || '', x + 8, cy + 72, { size:8.5, style:'bold' });
+      txt(sigData.title || '', x + 8, cy + 83, { size:7.5, color:C.muted });
+    };
+
+    await drawSigBox(ML,               'SHIPPER SIGNATURE',          data.shipper_signature||{}, sigDataUrl);
+    await drawSigBox(ML + sigBoxW + 8, 'CARRIER / DRIVER SIGNATURE', data.driver_signature||{},  sigDataUrl);
+
+    cy += sigBoxH + 10;
+
+    // ── 7. Footer ────────────────────────────────────────────────────────
+    strokeLine(ML, cy, ML + CW, cy, C.gray);
+    cy += 8;
+    const footerText =
+      'This Bill of Lading is a contract of carriage between the shipper and carrier. ' +
+      'Subject to applicable tariff rules and NMFC classifications. ' +
+      'Received in apparent good order except as noted. ' +
+      '49 U.S.C. § 14706 liability limitations may apply.';
+    doc.setFontSize(6.5); doc.setTextColor(C.muted); doc.setFont('helvetica','normal');
+    const fLines = doc.splitTextToSize(footerText, CW);
+    doc.text(fLines, ML, cy);
+    cy += fLines.length * 8 + 4;
+    txt(`Generated: ${new Date().toLocaleString()}  |  BOL: ${data.bol_number||''}`,
+        ML, cy, { size:6, color:C.gray });
+
+    // ── Save ─────────────────────────────────────────────────────────────
+    const filename = `BOL_${(data.bol_number||'document').replace(/[^a-zA-Z0-9-]/g,'_')}.pdf`;
+    doc.save(filename);
+    setStatus(`✓ PDF downloaded: ${filename}`, 'success');
+
+  } catch (err) {
+    console.error(err);
+    setStatus('❌ Error building PDF: ' + err.message, 'error');
+  }
+});
+</script>
+</body>
+</html>

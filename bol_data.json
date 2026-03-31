@@ -1,0 +1,84 @@
+{
+  "bol_number": "BOL-2024-00847",
+  "date": "2024-03-31",
+  "pro_number": "PRO-112938",
+
+  "shipper": {
+    "name": "Acme Manufacturing Co.",
+    "address": "1450 Industrial Blvd",
+    "city": "Atlanta",
+    "state": "GA",
+    "zip": "30301",
+    "phone": "(404) 555-0192"
+  },
+
+  "consignee": {
+    "name": "Global Distribution LLC",
+    "address": "8820 Commerce Drive",
+    "city": "Dallas",
+    "state": "TX",
+    "zip": "75201",
+    "phone": "(214) 555-0374"
+  },
+
+  "carrier": {
+    "name": "Swift Freight Solutions",
+    "scac": "SWFS",
+    "trailer_number": "TR-48821",
+    "seal_number": "SL-99201"
+  },
+
+  "billing": {
+    "type": "Prepaid",
+    "third_party": null
+  },
+
+  "special_instructions": "Handle with care. Temperature-sensitive materials. Keep above 40°F.",
+
+  "items": [
+    {
+      "description": "Industrial Motors - Model XT-400",
+      "quantity": 12,
+      "unit": "Pallets",
+      "weight_lbs": 4800,
+      "class": "85",
+      "nmfc": "114-700",
+      "hazmat": false
+    },
+    {
+      "description": "Control Panel Units - Series B",
+      "quantity": 6,
+      "unit": "Crates",
+      "weight_lbs": 1560,
+      "class": "92.5",
+      "nmfc": "103-420",
+      "hazmat": false
+    },
+    {
+      "description": "Hydraulic Fluid Drums",
+      "quantity": 4,
+      "unit": "Drums",
+      "weight_lbs": 1200,
+      "class": "60",
+      "nmfc": "081-120",
+      "hazmat": true
+    }
+  ],
+
+  "totals": {
+    "total_pieces": 22,
+    "total_weight_lbs": 7560
+  },
+
+  "shipper_signature": {
+    "name": "James Thornton",
+    "title": "Shipping Manager",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Signature_of_Barack_Obama.svg/400px-Signature_of_Barack_Obama.svg.png"
+  },
+
+  "driver_signature": {
+    "name": "Maria Gonzalez",
+    "title": "Driver",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Signature_of_Barack_Obama.svg/400px-Signature_of_Barack_Obama.svg.png"
+  }
+}
