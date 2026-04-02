@@ -23,7 +23,7 @@ header .sub{font-size:10px;color:#7a9bbf;font-family:'Courier New',monospace;let
 .badge{margin-left:auto;background:var(--gold);color:var(--navy);font-family:'Courier New',monospace;font-size:10px;font-weight:bold;letter-spacing:.1em;padding:4px 11px;border-radius:20px;white-space:nowrap}
 
 /* App shell */
-.app{display:grid;grid-template-columns:490px 1fr;height:calc(100vh - 58px)}
+.app{display:grid;grid-template-columns:1fr 320px;height:calc(100vh - 58px)}
 
 /* Left column */
 .left-col{display:flex;flex-direction:column;border-right:1px solid var(--gray);overflow:hidden}
@@ -75,20 +75,19 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
 /* Signature zones */
 .sig-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .sig-block label.sig-sec{font-size:9px;font-family:'Courier New',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);font-weight:bold;display:block;margin-bottom:5px}
-.sig-zone{position:relative;border:2px dashed var(--gray);border-radius:6px;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;background:var(--light);transition:border-color .15s}
-.sig-zone:hover{border-color:var(--blue)}
-.sig-zone.loaded{border-style:solid;border-color:var(--sky);background:var(--white)}
-.sig-zone img.sig-img{max-width:100%;max-height:72px;object-fit:contain;pointer-events:none}
-.sig-zone .ph{font-size:11px;color:var(--muted);text-align:center;padding:8px;font-style:italic;line-height:1.4}
-.sig-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
-.sig-row-btns{display:flex;gap:5px;margin-top:5px}
-.method-btn{flex:1;padding:4px;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--gray);border-radius:3px;background:var(--white);cursor:pointer;color:var(--muted);transition:all .12s}
-.method-btn.on{border-color:var(--blue);color:var(--blue);background:var(--sky)}
-.url-row{display:none;margin-top:5px}
-.url-row.show{display:block}
-.clear-sig{font-size:9px;color:var(--red);cursor:pointer;background:none;border:none;font-family:'Courier New',monospace;letter-spacing:.06em;text-transform:uppercase;margin-top:3px;display:none;padding:0}
-.clear-sig.show{display:inline-block}
-.sig-meta{margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.sig-preview{border:1.5px solid var(--gray);border-radius:6px;height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--light);transition:border-color .2s,background .2s;margin-bottom:6px;position:relative}
+.sig-preview.loaded{border-color:var(--sky);border-style:solid;background:var(--white)}
+.sig-preview img{max-width:100%;max-height:76px;object-fit:contain}
+.sig-preview .ph{font-size:10px;color:var(--gray);font-style:italic;text-align:center;padding:4px;line-height:1.5}
+.sig-preview.err{border-color:var(--red);background:#fff8f8}
+.sig-preview.err .ph{color:var(--red)}
+.sig-meta{display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.sig-input-row{display:flex;flex-direction:column;gap:2px;margin-top:6px}
+.file-input{padding:4px 6px;font-size:10px;font-family:'Courier New',monospace;background:var(--white);border:1.5px solid var(--gray);border-radius:5px;color:var(--muted);cursor:pointer;width:100%}
+.file-input:hover{border-color:var(--blue)}
+.sig-input-row label{color:var(--muted);letter-spacing:.06em;font-size:9px}
+.sig-clear{display:none;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--red);background:none;border:none;cursor:pointer;padding:0;margin-top:2px}
+.sig-clear.show{display:inline-block}
 
 /* Bottom bar */
 .bot-bar{flex-shrink:0;padding:10px 14px;background:var(--white);border-top:1px solid var(--gray);display:flex;align-items:center;gap:10px}
@@ -106,7 +105,7 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
 .preview-pane{display:flex;flex-direction:column;background:#525659;overflow:hidden}
 .prev-toolbar{background:#3c3c3c;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .prev-toolbar span{font-size:10px;font-family:'Courier New',monospace;color:#ccc;letter-spacing:.1em;text-transform:uppercase}
-#previewContainer{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px}
+#previewContainer{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:center;gap:12px}
 .prev-ph{color:#888;font-family:'Courier New',monospace;font-size:11px;text-align:center;margin:auto;letter-spacing:.08em;text-transform:uppercase;line-height:2.5}
 #previewContainer iframe{box-shadow:0 4px 20px rgba(0,0,0,.4);border:none;border-radius:2px;background:white}
 .sample-btn{padding:4px 10px;font-size:9px;font-family:'Courier New',monospace;letter-spacing:.08em;text-transform:uppercase;background:none;border:1px solid var(--gold);color:var(--gold);border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -207,42 +206,38 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
         <!-- Shipper sig -->
         <div class="sig-block">
           <label class="sig-sec">Shipper / Consignor</label>
-          <div class="sig-zone" id="zone-shipper">
-            <input type="file" id="file-shipper" accept="image/*"/>
-            <div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>
+          <div class="sig-preview" id="prev-shipper">
+            <div class="ph">📋 Signature preview</div>
           </div>
-          <div class="sig-row-btns">
-            <button class="method-btn on" data-who="shipper" data-m="upload">Upload</button>
-            <button class="method-btn" data-who="shipper" data-m="url">From URL</button>
-          </div>
-          <div class="url-row" id="url-row-shipper">
+          <button class="sig-clear" id="clear-shipper">✕ Clear</button>
+          <div class="sig-input-row">
+            <label>Upload image file</label>
+            <input type="file" id="file-shipper" accept="image/*" class="file-input"/>
+            <label style="margin-top:5px">— or paste image URL —</label>
             <input type="url" id="url-shipper" placeholder="https://…"/>
           </div>
-          <button class="clear-sig" id="clear-shipper">✕ Clear</button>
           <div class="sig-meta">
-            <div><label>Printed Name</label><input type="text" id="sig-name-shipper" placeholder="Full name"/></div>
-            <div><label>Title</label><input type="text" id="sig-title-shipper" placeholder="Shipping Manager"/></div>
+            <div><label>Printed Name</label><input type="text" id="sig-name-shipper" value="John Hancock"/></div>
+            <div><label>Title</label><input type="text" id="sig-title-shipper" value="Shipping Manager"/></div>
           </div>
         </div>
 
         <!-- Driver sig -->
         <div class="sig-block">
           <label class="sig-sec">Driver / Carrier</label>
-          <div class="sig-zone" id="zone-driver">
-            <input type="file" id="file-driver" accept="image/*"/>
-            <div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>
+          <div class="sig-preview" id="prev-driver">
+            <div class="ph">📋 Signature preview</div>
           </div>
-          <div class="sig-row-btns">
-            <button class="method-btn on" data-who="driver" data-m="upload">Upload</button>
-            <button class="method-btn" data-who="driver" data-m="url">From URL</button>
-          </div>
-          <div class="url-row" id="url-row-driver">
+          <button class="sig-clear" id="clear-driver">✕ Clear</button>
+          <div class="sig-input-row">
+            <label>Upload image file</label>
+            <input type="file" id="file-driver" accept="image/*" class="file-input"/>
+            <label style="margin-top:5px">— or paste image URL —</label>
             <input type="url" id="url-driver" placeholder="https://…"/>
           </div>
-          <button class="clear-sig" id="clear-driver">✕ Clear</button>
           <div class="sig-meta">
-            <div><label>Printed Name</label><input type="text" id="sig-name-driver" placeholder="Full name"/></div>
-            <div><label>Title / License #</label><input type="text" id="sig-title-driver" placeholder="Driver / CDL-A"/></div>
+            <div><label>Printed Name</label><input type="text" id="sig-name-driver" value="George Washington"/></div>
+            <div><label>Title / License #</label><input type="text" id="sig-title-driver" value="Driver / CDL-A"/></div>
           </div>
         </div>
 
@@ -314,88 +309,84 @@ document.getElementById('addItemBtn').addEventListener('click',()=>{
   renderItems();
 });
 
-// ── Signature system ──────────────────────────────────────────────
+// ── Signature system (file upload + URL + live preview + clear) ───
 const sigData = {shipper:null, driver:null};
 
+function setSigPreview(who, dataUrl) {
+  const prevEl  = document.getElementById('prev-'+who);
+  const clearBtn = document.getElementById('clear-'+who);
+  sigData[who] = dataUrl;
+  prevEl.className = 'sig-preview loaded';
+  prevEl.innerHTML = `<img src="${dataUrl}" alt="signature" style="max-width:100%;max-height:76px;object-fit:contain"/>`;
+  clearBtn.classList.add('show');
+}
+
+function resetPreview(who) {
+  const prevEl  = document.getElementById('prev-'+who);
+  const clearBtn = document.getElementById('clear-'+who);
+  sigData[who] = null;
+  prevEl.className = 'sig-preview';
+  prevEl.innerHTML = '<div class="ph">📋 Signature preview</div>';
+  clearBtn.classList.remove('show');
+}
+
 function initSig(who) {
-  const zone  = document.getElementById('zone-'+who);
-  const clear = document.getElementById('clear-'+who);
-  const urlRow= document.getElementById('url-row-'+who);
-  const urlIn = document.getElementById('url-'+who);
+  const urlIn   = document.getElementById('url-'+who);
+  const fileIn  = document.getElementById('file-'+who);
+  const prevEl  = document.getElementById('prev-'+who);
+  const clearBtn = document.getElementById('clear-'+who);
 
-  const attachFile = () => {
-    const fi = document.getElementById('file-'+who);
-    if(!fi) return;
-    fi.addEventListener('change', e=>{
-      const f = e.target.files[0]; if(!f) return;
-      const fr = new FileReader();
-      fr.onload = ev => setSig(who, ev.target.result);
-      fr.readAsDataURL(f);
-    });
-  };
-  attachFile();
-
-  // Drag & drop
-  zone.addEventListener('dragover', e=>{e.preventDefault(); zone.style.borderColor='var(--blue)';});
-  zone.addEventListener('dragleave', ()=>zone.style.borderColor='');
-  zone.addEventListener('drop', e=>{
-    e.preventDefault(); zone.style.borderColor='';
-    const f = e.dataTransfer.files[0];
-    if(!f||!f.type.startsWith('image/')) return;
-    const fr = new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(f);
+  // File upload → read as data URL → show in preview
+  fileIn.addEventListener('change', () => {
+    const f = fileIn.files[0];
+    if (!f) return;
+    prevEl.innerHTML = '<div class="ph" style="color:var(--muted)">Loading…</div>';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      setSigPreview(who, ev.target.result);
+      urlIn.value = ''; // clear URL field when file chosen
+    };
+    reader.readAsDataURL(f);
   });
 
-  // URL
-  let urlT;
-  urlIn.addEventListener('input', ()=>{
-    clearTimeout(urlT); urlT = setTimeout(()=>loadUrl(who, urlIn.value.trim()), 600);
+  // URL input with debounce
+  let debounce;
+  urlIn.addEventListener('input', () => {
+    clearTimeout(debounce);
+    const url = urlIn.value.trim();
+    if (!url) { resetPreview(who); return; }
+    prevEl.className = 'sig-preview';
+    prevEl.innerHTML = '<div class="ph" style="color:var(--muted)">Loading…</div>';
+    debounce = setTimeout(() => loadSigUrl(who, url), 650);
   });
 
-  // Clear
-  clear.addEventListener('click', ()=>{
-    sigData[who] = null;
-    zone.classList.remove('loaded');
-    zone.innerHTML = `<input type="file" id="file-${who}" accept="image/*"/><div class="ph">📁 Click or drop<br/><small>PNG · JPG · SVG</small></div>`;
-    attachFile();
-    clear.classList.remove('show');
-    urlIn.value='';
-  });
-
-  // Method buttons
-  document.querySelectorAll(`.method-btn[data-who="${who}"]`).forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll(`.method-btn[data-who="${who}"]`).forEach(b=>b.classList.remove('on'));
-      btn.classList.add('on');
-      urlRow.classList.toggle('show', btn.dataset.m==='url');
-    });
+  // Clear button
+  clearBtn.addEventListener('click', () => {
+    fileIn.value = '';
+    urlIn.value  = '';
+    resetPreview(who);
   });
 }
 
-async function loadUrl(who, url) {
-  if(!url) return;
+async function loadSigUrl(who, url) {
+  const prevEl = document.getElementById('prev-'+who);
   try {
     const res = await fetch(url);
-    if(!res.ok) throw 0;
+    if (!res.ok) throw new Error('HTTP '+res.status);
     const blob = await res.blob();
-    const fr = new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(blob);
-  } catch { setStatus('Could not load image from URL','err'); }
+    if (!blob.type.startsWith('image/')) throw new Error('Not an image');
+    const reader = new FileReader();
+    reader.onload = ev => setSigPreview(who, ev.target.result);
+    reader.readAsDataURL(blob);
+  } catch {
+    sigData[who] = null;
+    prevEl.className = 'sig-preview err';
+    prevEl.innerHTML = '<div class="ph">⚠ Could not load — check URL or CORS</div>';
+  }
 }
 
-function setSig(who, dataUrl) {
-  sigData[who] = dataUrl;
-  const zone  = document.getElementById('zone-'+who);
-  const clear = document.getElementById('clear-'+who);
-  zone.innerHTML = `<input type="file" id="file-${who}" accept="image/*"/><img class="sig-img" src="${dataUrl}" alt="sig"/>`;
-  zone.classList.add('loaded');
-  // Re-attach file listener so user can replace
-  document.getElementById('file-'+who).addEventListener('change', e=>{
-    const f=e.target.files[0]; if(!f) return;
-    const fr=new FileReader(); fr.onload=ev=>setSig(who,ev.target.result); fr.readAsDataURL(f);
-  });
-  clear.classList.add('show');
-}
-
-initSig('shipper'); initSig('driver');
+initSig('shipper');
+initSig('driver');
 
 // ── Sample data ───────────────────────────────────────────────────
 const SAMPLE = {
@@ -412,8 +403,8 @@ const SAMPLE = {
     {description:"Control Panel Units – Series B",quantity:6,unit:"Crates",weight_lbs:1560,class:"92.5",nmfc:"103-420",hazmat:false},
     {description:"Hydraulic Fluid Drums",quantity:4,unit:"Drums",weight_lbs:1200,class:"60",nmfc:"081-120",hazmat:true}
   ],
-  shipper_signature:{name:"James Thornton",title:"Shipping Manager"},
-  driver_signature:{name:"Maria Gonzalez",title:"Driver / CDL-A"}
+  shipper_signature:{name:"John Hancock",title:"Shipping Manager"},
+  driver_signature:{name:"George Washington",title:"Driver / CDL-A"},
 };
 
 function loadIntoForm(d) {
@@ -708,9 +699,15 @@ document.getElementById('generateBtn').addEventListener('click',async()=>{
     container.innerHTML='';
 
     const iframe=document.createElement('iframe');
-    iframe.style.cssText='width:612px;height:792px;border:none;box-shadow:0 4px 20px rgba(0,0,0,.45);border-radius:2px;background:white';
+    // Scale to fit ~320px preview pane with padding
+    const scale=0.41;
+    const iW=612, iH=792;
+    const wrapper=document.createElement('div');
+    wrapper.style.cssText=`width:${Math.round(iW*scale)}px;height:${Math.round(iH*scale)}px;overflow:hidden;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.45);border-radius:2px;flex-shrink:0`;
+    iframe.style.cssText=`width:${iW}px;height:${iH}px;border:none;background:white;transform:scale(${scale});transform-origin:top left;position:absolute;top:0;left:0`;
     iframe.src=doc.output('dataurlstring');
-    container.appendChild(iframe);
+    wrapper.appendChild(iframe);
+    container.appendChild(wrapper);
 
     document.getElementById('pgInfo').textContent='1 page · Letter';
     document.getElementById('downloadBtn').classList.add('show');
