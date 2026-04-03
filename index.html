@@ -23,10 +23,15 @@ header .sub{font-size:10px;color:#7a9bbf;font-family:'Courier New',monospace;let
 .badge{margin-left:auto;background:var(--gold);color:var(--navy);font-family:'Courier New',monospace;font-size:10px;font-weight:bold;letter-spacing:.1em;padding:4px 11px;border-radius:20px;white-space:nowrap}
 
 /* App shell */
-.app{display:grid;grid-template-columns:1fr 320px;height:calc(100vh - 58px)}
+.app{display:flex;height:calc(100vh - 58px);overflow:hidden}
+
+/* Drag divider */
+.divider{width:5px;background:var(--gray);cursor:col-resize;flex-shrink:0;transition:background .12s;position:relative;z-index:10;user-select:none}
+.divider:hover,.divider.dragging{background:var(--gold)}
+.divider::after{content:'⋮';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(0,0,0,.25);font-size:14px;line-height:1;pointer-events:none}
 
 /* Left column */
-.left-col{display:flex;flex-direction:column;border-right:1px solid var(--gray);overflow:hidden}
+.left-col{display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
 .panel{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
 
 /* Cards */
@@ -102,7 +107,7 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
 #status.ok{color:var(--green)}
 
 /* Preview pane */
-.preview-pane{display:flex;flex-direction:column;background:#525659;overflow:hidden}
+.preview-pane{display:flex;flex-direction:column;background:#525659;overflow:hidden;flex:1;min-width:200px}
 .prev-toolbar{background:#3c3c3c;padding:7px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
 .prev-toolbar span{font-size:10px;font-family:'Courier New',monospace;color:#ccc;letter-spacing:.1em;text-transform:uppercase}
 #previewContainer{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;align-items:center;gap:12px}
@@ -122,10 +127,10 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
   <div class="badge">⚡ No-Server Demo</div>
 </header>
 
-<div class="app">
+<div class="app" id="appShell">
 
 <!-- ══════════ LEFT PANEL ══════════ -->
-<div class="left-col">
+<div class="left-col" id="leftCol" style="width:40%;min-width:280px">
 <div class="panel">
 
   <!-- Input method card -->
@@ -256,6 +261,9 @@ textarea.json-area.invalid{border-color:var(--red);background:#fff8f8}
   <button class="dl-btn" id="downloadBtn">⬇ Download PDF</button>
 </div>
 </div><!-- /left-col -->
+
+<!-- ══════════ DRAG DIVIDER ══════════ -->
+<div class="divider" id="divider"></div>
 
 <!-- ══════════ RIGHT PREVIEW ══════════ -->
 <div class="preview-pane">
@@ -726,6 +734,40 @@ document.getElementById('downloadBtn').addEventListener('click',()=>{
   currentDoc.save(fname);
   setStatus('✓ Downloaded: '+fname,'ok');
 });
+
+// ── Draggable divider ─────────────────────────────────────────────
+(function(){
+  const divider = document.getElementById('divider');
+  const leftCol = document.getElementById('leftCol');
+  const app     = document.getElementById('appShell');
+  let dragging  = false, startX = 0, startW = 0;
+
+  divider.addEventListener('mousedown', e => {
+    dragging = true;
+    startX   = e.clientX;
+    startW   = leftCol.getBoundingClientRect().width;
+    divider.classList.add('dragging');
+    document.body.style.cursor    = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const appW  = app.getBoundingClientRect().width;
+    const delta = e.clientX - startX;
+    const newW  = Math.min(Math.max(startW + delta, 240), appW - 240);
+    leftCol.style.width = newW + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    divider.classList.remove('dragging');
+    document.body.style.cursor     = '';
+    document.body.style.userSelect = '';
+  });
+})();
 
 // ── Init with sample ──────────────────────────────────────────────
 loadIntoForm(SAMPLE);
