@@ -706,16 +706,32 @@ document.getElementById('generateBtn').addEventListener('click',async()=>{
     if(ph) ph.style.display='none';
     container.innerHTML='';
 
-    const iframe=document.createElement('iframe');
-    // Scale to fit ~320px preview pane with padding
-    const scale=0.41;
     const iW=612, iH=792;
     const wrapper=document.createElement('div');
-    wrapper.style.cssText=`width:${Math.round(iW*scale)}px;height:${Math.round(iH*scale)}px;overflow:hidden;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.45);border-radius:2px;flex-shrink:0`;
-    iframe.style.cssText=`width:${iW}px;height:${iH}px;border:none;background:white;transform:scale(${scale});transform-origin:top left;position:absolute;top:0;left:0`;
+    wrapper.id='pdfWrapper';
+    wrapper.style.cssText=`position:relative;box-shadow:0 4px 20px rgba(0,0,0,.45);border-radius:2px;flex-shrink:0;overflow:hidden`;
+    const iframe=document.createElement('iframe');
+    iframe.id='pdfIframe';
+    iframe.style.cssText=`width:${iW}px;height:${iH}px;border:none;background:white;transform-origin:top left;position:absolute;top:0;left:0`;
     iframe.src=doc.output('dataurlstring');
     wrapper.appendChild(iframe);
     container.appendChild(wrapper);
+
+    // Scale PDF to fill available container width
+    function scalePDF() {
+      const pane = document.getElementById('previewContainer');
+      const available = pane.clientWidth - 32; // 16px padding each side
+      const scale = Math.min(available / iW, 1.0); // never upscale beyond 100%
+      iframe.style.transform = `scale(${scale})`;
+      wrapper.style.width  = Math.round(iW * scale) + 'px';
+      wrapper.style.height = Math.round(iH * scale) + 'px';
+    }
+    scalePDF();
+
+    // Re-scale when divider is dragged or window resizes
+    if (window._pdfResizeObserver) window._pdfResizeObserver.disconnect();
+    window._pdfResizeObserver = new ResizeObserver(scalePDF);
+    window._pdfResizeObserver.observe(document.getElementById('previewContainer'));
 
     document.getElementById('pgInfo').textContent='1 page · Letter';
     document.getElementById('downloadBtn').classList.add('show');
